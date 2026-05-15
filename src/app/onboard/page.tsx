@@ -1,0 +1,153 @@
+// src/app/onboard/page.tsx
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { UserProfile, ResumeParseResult } from "@/types";
+import { ResumeUpload } from "@/components/onboard/steps/ResumeUpload";
+import { Interests } from "@/components/onboard/steps/Interests";
+import { Industries } from "@/components/onboard/steps/Industries";
+
+const STEPS = ["Academic", "Resume", "Interests", "Industries", "Lifestyle"];
+
+const EMPTY: UserProfile = {
+  schoolType: "JC", institution: "", subjects: [],
+  resumeText: "", resumeKeywords: [], achievements: "",
+  interests: [], preferredIndustries: [], lifestylePrefs: [],
+};
+
+export default function OnboardPage() {
+  const [step, setStep] = useState(0);
+  const [profile, setProfile] = useState<UserProfile>(EMPTY);
+  const [resumeData, setResumeData] = useState<ResumeParseResult | null>(null);
+  const router = useRouter();
+
+  const update = (patch: Partial<UserProfile>) => setProfile(p => ({ ...p, ...patch }));
+
+  function handleResumeParsed(result: ResumeParseResult) {
+    setResumeData(result);
+    update({
+      resumeText: result.rawText,
+      resumeKeywords: result.keywords,
+      interests: profile.interests.length === 0 ? result.detectedInterests : profile.interests,
+      preferredIndustries: profile.preferredIndustries.length === 0 ? result.detectedIndustries : profile.preferredIndustries,
+    });
+  }
+
+  function submit() {
+    sessionStorage.setItem("cgu_profile", JSON.stringify(profile));
+    router.push("/dashboard");
+  }
+
+  return (
+    <main style={{ minHeight: "100vh", background: "#080A08", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px" }}>
+
+      {/* Step indicator */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "48px", width: "100%", maxWidth: "520px" }}>
+        {STEPS.map((s, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+              <div style={{ width: "6px", height: "6px", background: i <= step ? "#78BE50" : "#383E33" }} />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: i <= step ? "#78BE50" : "#383E33", whiteSpace: "nowrap" }}>{s}</span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div style={{ flex: 1, height: "0.5px", background: i < step ? "#78BE50" : "rgba(255,255,255,0.08)", margin: "0 4px", marginBottom: "14px" }} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Form card */}
+      <div style={{ width: "100%", maxWidth: "520px", background: "#0F120F", border: "0.5px solid rgba(255,255,255,0.08)", padding: "36px" }}>
+
+        {step === 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: "#E8EAE3" }}>Your academic profile</h2>
+            <div>
+              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>School type</label>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {(["JC", "Poly"] as const).map(t => (
+                  <button key={t} onClick={() => update({ schoolType: t })} style={{
+                    flex: 1, padding: "10px",
+                    border: `0.5px solid ${profile.schoolType === t ? "#78BE50" : "rgba(255,255,255,0.1)"}`,
+                    background: profile.schoolType === t ? "rgba(120,190,80,0.1)" : "transparent",
+                    color: profile.schoolType === t ? "#78BE50" : "#9AA392",
+                    fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer",
+                  }}>{t}</button>
+                ))}
+              </div>
+            </div>
+            {profile.schoolType === "JC" ? (
+              <div>
+                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–90)</label>
+                <input type="number" min={0} max={90} step={0.5} value={profile.rankPoints ?? ""} onChange={e => update({ rankPoints: parseFloat(e.target.value) })} placeholder="e.g. 87.5"
+                  style={{ width: "100%", background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+              </div>
+            ) : (
+              <div>
+                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>GPA (0.0–4.0)</label>
+                <input type="number" min={0} max={4} step={0.01} value={profile.gpa ?? ""} onChange={e => update({ gpa: parseFloat(e.target.value) })} placeholder="e.g. 3.85"
+                  style={{ width: "100%", background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+              </div>
+            )}
+            <div>
+              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Institution</label>
+              <input value={profile.institution} onChange={e => update({ institution: e.target.value })} placeholder="e.g. Hwa Chong JC / Ngee Ann Poly"
+                style={{ width: "100%", background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+            </div>
+          </div>
+        )}
+
+        {step === 1 && <ResumeUpload onParsed={handleResumeParsed} />}
+
+        {step === 2 && (
+          <Interests
+            selected={profile.interests}
+            onChange={interests => update({ interests })}
+            suggestedFromResume={resumeData?.detectedInterests}
+          />
+        )}
+
+        {step === 3 && (
+          <Industries
+            selected={profile.preferredIndustries}
+            onChange={preferredIndustries => update({ preferredIndustries })}
+            suggestedFromResume={resumeData?.detectedIndustries}
+          />
+        )}
+
+        {step === 4 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: "#E8EAE3" }}>What matters to you on campus?</h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {["Strong hall life","Research focus","Career-oriented","Sports culture","Study spaces","Vibrant social scene","Overseas exchange","Startup ecosystem","Arts & culture","Close-knit community"].map(pref => {
+                const on = profile.lifestylePrefs.includes(pref);
+                return (
+                  <button key={pref} onClick={() => update({ lifestylePrefs: on ? profile.lifestylePrefs.filter(p => p !== pref) : [...profile.lifestylePrefs, pref] })} style={{
+                    fontFamily: "var(--font-mono)", fontSize: "9px", padding: "6px 12px",
+                    border: `0.5px solid ${on ? "#78BE50" : "rgba(255,255,255,0.12)"}`,
+                    background: on ? "rgba(120,190,80,0.1)" : "transparent",
+                    color: on ? "#E8EAE3" : "#9AA392", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+                  }}>{pref}</button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Nav buttons */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "32px" }}>
+          {step > 0 ? (
+            <button onClick={() => setStep(s => s - 1)} style={{ background: "transparent", color: "#9AA392", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 20px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>← Back</button>
+          ) : <div />}
+          <button onClick={step < STEPS.length - 1 ? () => setStep(s => s + 1) : submit} style={{ background: "#78BE50", color: "#080A08", border: "none", padding: "10px 24px", fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+            {step === STEPS.length - 1 ? "See My Results →" : "Continue →"}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#383E33", letterSpacing: "0.08em", marginTop: "16px" }}>
+        STEP {step + 1} OF {STEPS.length} · DATA STAYS IN YOUR BROWSER
+      </div>
+    </main>
+  );
+}

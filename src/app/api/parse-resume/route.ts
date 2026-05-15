@@ -1,21 +1,66 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import type { ResumeParseResult } from "@/types";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+export const runtime = "nodejs";
+
+function fallbackParse(text: string): ResumeParseResult {
+  const words = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s+#.]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 4);
+  const keywords = [...new Set(words)].slice(0, 25);
+
+  const interestHints = [
+    "technology", "computing", "engineering", "business", "finance",
+    "law", "medicine", "design", "data", "science", "marketing",
+  ];
+  const industryHints = [
+    "Technology", "Finance", "Healthcare", "Consulting", "Engineering",
+    "Education", "Government", "Media", "Legal", "Marketing",
+  ];
+
+  const lower = text.toLowerCase();
+  const detectedInterests = interestHints.filter(h => lower.includes(h));
+  const detectedIndustries = industryHints.filter(h => lower.includes(h.toLowerCase()));
+
+  return {
+    rawText: text,
+    keywords,
+    detectedInterests,
+    detectedIndustries,
+  };
+}
 
 export async function POST(req: NextRequest) {
   const { text } = await req.json();
-  if (!text || text.length < 50)
-    return NextResponse.json({ error: "Resume too short" }, { status: 400 });
+  if (!text || typeof text !== "string") {
+    return NextResponse.json({ error: "No resume text provided" }, { status: 400 });
+  }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const trimmed = text.trim();
+  if (trimmed.length < 30) {
+    return NextResponse.json(
+      { error: "Resume text is too short. Add more detail or use the manual field." },
+      { status: 400 },
+    );
+  }
 
-  const prompt = `
-Analyse this student's resume and return ONLY valid JSON — no markdown, no explanation.
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.includes("YourKeyHere")) {
+    return NextResponse.json(fallbackParse(trimmed));
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const prompt = `Analyse this student's resume and return ONLY valid JSON — no markdown, no explanation.
 
 Resume:
 """
-${text.slice(0, 4000)}
+${trimmed.slice(0, 4000)}
 """
 
 Return exactly:
@@ -25,18 +70,18 @@ Return exactly:
   "detectedIndustries": ["inferred industries e.g. Technology, Finance, Healthcare, Education, Government, Consulting, Media, Engineering, Biotech, Legal, Marketing, Logistics"]
 }`;
 
-  const result = await model.generateContent(prompt);
-  const cleaned = result.response.text().replace(/```json|```/g, "").trim();
-
-  try {
+    const result = await model.generateContent(prompt);
+    const cleaned = result.response.text().replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
+
     return NextResponse.json({
-      rawText: text,
+      rawText: trimmed,
       keywords: parsed.keywords ?? [],
       detectedInterests: parsed.detectedInterests ?? [],
       detectedIndustries: parsed.detectedIndustries ?? [],
-    });
-  } catch {
-    return NextResponse.json({ error: "AI parse failed" }, { status: 500 });
+    } satisfies ResumeParseResult);
+  } catch (e) {
+    console.error("parse-resume AI error", e);
+    return NextResponse.json(fallbackParse(trimmed));
   }
 }

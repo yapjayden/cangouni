@@ -1,6 +1,6 @@
 // src/components/onboard/steps/Interests.tsx
 "use client";
-import { interestCategories } from "@/data/igp";
+import { interestCategories } from "@/lib/courses";
 
 interface Props {
   selected: string[];

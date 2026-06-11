@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FilterSidebar } from "@/components/dashboard/FilterSidebar";
 import { ResultsGrid } from "@/components/dashboard/ResultsGrid";
 import { calculateProbabilities } from "@/lib/probability";
+import { colors } from "@/theme";
 import type { ProbabilityResult, University, UserProfile } from "@/types";
 
 export default function DashboardPage() {
@@ -46,7 +47,7 @@ export default function DashboardPage() {
 
   if (!profile) {
     return (
-      <main style={{ minHeight: "100vh", background: "#080A08", display: "flex", alignItems: "center", justifyContent: "center", color: "#9AA392" }}>
+      <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", color: colors.muted }}>
         Loading your results…
       </main>
     );
@@ -57,30 +58,30 @@ export default function DashboardPage() {
     : `GPA ${profile.gpa ?? "—"}`;
 
   return (
-    <main style={{ minHeight: "100vh", background: "#080A08", color: "#E8EAE3" }}>
+    <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text }}>
       <header style={{
         height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 32px", borderBottom: "1px solid rgba(255,255,255,0.07)",
         position: "sticky", top: 0, background: "rgba(8,10,8,0.95)", zIndex: 50,
       }}>
-        <Link href="/" style={{ textDecoration: "none", color: "#E8EAE3", fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "20px" }}>
-          Can<span style={{ color: "#78BE50" }}>Go</span>Uni
+        <Link href="/" style={{ textDecoration: "none", color: colors.text, fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "20px" }}>
+          Can<span style={{ color: colors.accent }}>Go</span>Uni
         </Link>
         <nav style={{ display: "flex", gap: "12px" }}>
           <Link href="/onboard" style={navLinkStyle}>Edit profile</Link>
-          <Link href="/chat" style={{ ...navLinkStyle, background: "#78BE50", color: "#080A08", border: "none" }}>AI Advisor →</Link>
+          <Link href="/chat" style={{ ...navLinkStyle, background: colors.accent, color: colors.bg, border: "none" }}>AI Advisor →</Link>
         </nav>
       </header>
 
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px 64px" }}>
         <div style={{ marginBottom: "32px" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#383E33", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.faint, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>
             Your admission outlook
           </div>
           <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "clamp(28px, 4vw, 40px)", marginBottom: "8px" }}>
             {filtered.length} courses ranked for you
           </h1>
-          <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: "#9AA392" }}>
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: colors.muted }}>
             {profile.schoolType} · {scoreLabel} · {profile.institution || "No institution"} · * = may require interview
           </p>
         </div>
@@ -110,6 +111,6 @@ const navLinkStyle: React.CSSProperties = {
   textTransform: "uppercase",
   padding: "10px 16px",
   border: "0.5px solid rgba(255,255,255,0.12)",
-  color: "#9AA392",
+  color: colors.muted,
   textDecoration: "none",
 };

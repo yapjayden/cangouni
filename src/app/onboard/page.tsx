@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserProfile, ResumeParseResult } from "@/types";
+import { colors } from "@/theme";
 import { ResumeUpload } from "@/components/onboard/steps/ResumeUpload";
 import { Interests } from "@/components/onboard/steps/Interests";
 import { Industries } from "@/components/onboard/steps/Industries";
@@ -39,38 +40,38 @@ export default function OnboardPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#080A08", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px" }}>
+    <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px" }}>
 
       {/* Step indicator */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "48px", width: "100%", maxWidth: "520px" }}>
         {STEPS.map((s, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-              <div style={{ width: "6px", height: "6px", background: i <= step ? "#78BE50" : "#383E33" }} />
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: i <= step ? "#78BE50" : "#383E33", whiteSpace: "nowrap" }}>{s}</span>
+              <div style={{ width: "6px", height: "6px", background: i <= step ? colors.accent : colors.faint }} />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: i <= step ? colors.accent : colors.faint, whiteSpace: "nowrap" }}>{s}</span>
             </div>
             {i < STEPS.length - 1 && (
-              <div style={{ flex: 1, height: "0.5px", background: i < step ? "#78BE50" : "rgba(255,255,255,0.08)", margin: "0 4px", marginBottom: "14px" }} />
+              <div style={{ flex: 1, height: "0.5px", background: i < step ? colors.accent : "rgba(255,255,255,0.08)", margin: "0 4px", marginBottom: "14px" }} />
             )}
           </div>
         ))}
       </div>
 
       {/* Form card */}
-      <div style={{ width: "100%", maxWidth: "520px", background: "#0F120F", border: "0.5px solid rgba(255,255,255,0.08)", padding: "36px" }}>
+      <div style={{ width: "100%", maxWidth: "520px", background: colors.surface, border: "0.5px solid rgba(255,255,255,0.08)", padding: "36px" }}>
 
         {step === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: "#E8EAE3" }}>Your academic profile</h2>
+            <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: colors.text }}>Your academic profile</h2>
             <div>
-              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>School type</label>
+              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>School type</label>
               <div style={{ display: "flex", gap: "8px" }}>
                 {(["JC", "Poly"] as const).map(t => (
                   <button key={t} onClick={() => update({ schoolType: t })} style={{
                     flex: 1, padding: "10px",
-                    border: `0.5px solid ${profile.schoolType === t ? "#78BE50" : "rgba(255,255,255,0.1)"}`,
+                    border: `0.5px solid ${profile.schoolType === t ? colors.accent : "rgba(255,255,255,0.1)"}`,
                     background: profile.schoolType === t ? "rgba(120,190,80,0.1)" : "transparent",
-                    color: profile.schoolType === t ? "#78BE50" : "#9AA392",
+                    color: profile.schoolType === t ? colors.accent : colors.muted,
                     fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer",
                   }}>{t}</button>
                 ))}
@@ -78,21 +79,21 @@ export default function OnboardPage() {
             </div>
             {profile.schoolType === "JC" ? (
               <div>
-                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–90)</label>
+                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–90)</label>
                 <input type="number" min={0} max={90} step={0.5} value={profile.rankPoints ?? ""} onChange={e => update({ rankPoints: parseFloat(e.target.value) })} placeholder="e.g. 87.5"
-                  style={{ width: "100%", background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+                  style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
               </div>
             ) : (
               <div>
-                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>GPA (0.0–4.0)</label>
+                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>GPA (0.0–4.0)</label>
                 <input type="number" min={0} max={4} step={0.01} value={profile.gpa ?? ""} onChange={e => update({ gpa: parseFloat(e.target.value) })} placeholder="e.g. 3.85"
-                  style={{ width: "100%", background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+                  style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
               </div>
             )}
             <div>
-              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Institution</label>
+              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Institution</label>
               <input value={profile.institution} onChange={e => update({ institution: e.target.value })} placeholder="e.g. Hwa Chong JC / Ngee Ann Poly"
-                style={{ width: "100%", background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+                style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
             </div>
           </div>
         )}
@@ -117,16 +118,16 @@ export default function OnboardPage() {
 
         {step === 4 && (
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: "#E8EAE3" }}>What matters to you on campus?</h2>
+            <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: colors.text }}>What matters to you on campus?</h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {["Strong hall life","Research focus","Career-oriented","Sports culture","Study spaces","Vibrant social scene","Overseas exchange","Startup ecosystem","Arts & culture","Close-knit community"].map(pref => {
                 const on = profile.lifestylePrefs.includes(pref);
                 return (
                   <button key={pref} onClick={() => update({ lifestylePrefs: on ? profile.lifestylePrefs.filter(p => p !== pref) : [...profile.lifestylePrefs, pref] })} style={{
                     fontFamily: "var(--font-mono)", fontSize: "9px", padding: "6px 12px",
-                    border: `0.5px solid ${on ? "#78BE50" : "rgba(255,255,255,0.12)"}`,
+                    border: `0.5px solid ${on ? colors.accent : "rgba(255,255,255,0.12)"}`,
                     background: on ? "rgba(120,190,80,0.1)" : "transparent",
-                    color: on ? "#E8EAE3" : "#9AA392", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+                    color: on ? colors.text : colors.muted, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
                   }}>{pref}</button>
                 );
               })}
@@ -137,15 +138,15 @@ export default function OnboardPage() {
         {/* Nav buttons */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "32px" }}>
           {step > 0 ? (
-            <button onClick={() => setStep(s => s - 1)} style={{ background: "transparent", color: "#9AA392", border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 20px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>← Back</button>
+            <button onClick={() => setStep(s => s - 1)} style={{ background: "transparent", color: colors.muted, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 20px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>← Back</button>
           ) : <div />}
-          <button onClick={step < STEPS.length - 1 ? () => setStep(s => s + 1) : submit} style={{ background: "#78BE50", color: "#080A08", border: "none", padding: "10px 24px", fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+          <button onClick={step < STEPS.length - 1 ? () => setStep(s => s + 1) : submit} style={{ background: colors.accent, color: colors.bg, border: "none", padding: "10px 24px", fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
             {step === STEPS.length - 1 ? "See My Results →" : "Continue →"}
           </button>
         </div>
       </div>
 
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#383E33", letterSpacing: "0.08em", marginTop: "16px" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.faint, letterSpacing: "0.08em", marginTop: "16px" }}>
         STEP {step + 1} OF {STEPS.length} · DATA STAYS IN YOUR BROWSER
       </div>
     </main>

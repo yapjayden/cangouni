@@ -8,9 +8,11 @@ interface Props {
   compareIds?: string[];
   onToggleCompare?: (id: string) => void;
   compareLimitReached?: boolean;
+  bookmarks?: string[];
+  onToggleBookmark?: (id: string) => void;
 }
 
-export function ResultsGrid({ results, compareIds = [], onToggleCompare, compareLimitReached }: Props) {
+export function ResultsGrid({ results, compareIds = [], onToggleCompare, compareLimitReached, bookmarks = [], onToggleBookmark }: Props) {
   if (results.length === 0) {
     return (
       <div style={{ padding: "48px", textAlign: "center", color: "#9AA392", fontFamily: "var(--font-ui)" }}>
@@ -29,6 +31,8 @@ export function ResultsGrid({ results, compareIds = [], onToggleCompare, compare
           compareSelected={compareIds.includes(r.course.id)}
           onToggleCompare={onToggleCompare}
           compareDisabled={compareLimitReached}
+          bookmarked={bookmarks.includes(r.course.id)}
+          onToggleBookmark={onToggleBookmark}
         />
       ))}
     </div>

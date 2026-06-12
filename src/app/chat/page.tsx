@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "@/components/chat/ChatThread";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { colors } from "@/theme";
-import type { UserProfile } from "@/types";
+import { loadProfile, loadBookmarks } from "@/lib/storage";
+import { calculateProbabilities } from "@/lib/probability";
+import type { ProbabilityResult, UserProfile } from "@/types";
 
 const STARTERS = [
   "Which of my top courses should I apply first?",
@@ -17,21 +19,34 @@ const STARTERS = [
 export default function ChatPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [results, setResults] = useState<ProbabilityResult[]>([]);
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("cgu_profile");
-    if (!raw) {
+    const p = loadProfile();
+    if (!p) {
       router.replace("/onboard");
       return;
     }
-    try {
-      setProfile(JSON.parse(raw) as UserProfile);
-    } catch {
-      router.replace("/onboard");
-    }
+    setProfile(p);
+    setResults(calculateProbabilities(p));
+    setBookmarks(loadBookmarks());
   }, [router]);
+
+  // A compact view of the student's ranked courses for the advisor to reason over.
+  function resultsContext() {
+    const top = results.slice(0, 8).map(r => ({
+      university: r.course.university,
+      course: r.course.course,
+      admissionChance: r.admissionChance,
+      matchScore: r.matchScore,
+      interview: r.reasons.interview,
+      shortlisted: bookmarks.includes(r.course.id),
+    }));
+    return top;
+  }
 
   async function send(text: string) {
     if (!profile || loading) return;
@@ -51,6 +66,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           messages: nextMessages.map(m => ({ role: m.role, content: m.content })),
           userProfile: profile,
+          rankedCourses: resultsContext(),
         }),
       });
 

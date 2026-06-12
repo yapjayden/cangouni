@@ -1,9 +1,10 @@
 // src/app/onboard/page.tsx
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserProfile, ResumeParseResult } from "@/types";
 import { colors } from "@/theme";
+import { saveProfile, loadProfile } from "@/lib/storage";
 import { ResumeUpload } from "@/components/onboard/steps/ResumeUpload";
 import { Interests } from "@/components/onboard/steps/Interests";
 import { Industries } from "@/components/onboard/steps/Industries";
@@ -28,6 +29,12 @@ export default function OnboardPage() {
   const [resumeData, setResumeData] = useState<ResumeParseResult | null>(null);
   const [scoreError, setScoreError] = useState("");
   const router = useRouter();
+
+  // Resume from a previously saved profile so "Edit profile" keeps prior answers.
+  useEffect(() => {
+    const saved = loadProfile();
+    if (saved) setProfile({ ...EMPTY, ...saved });
+  }, []);
 
   const update = (patch: Partial<UserProfile>) => setProfile(p => ({ ...p, ...patch }));
 
@@ -69,7 +76,7 @@ export default function OnboardPage() {
   }
 
   function submit() {
-    sessionStorage.setItem("cgu_profile", JSON.stringify(profile));
+    saveProfile(profile);
     router.push("/dashboard");
   }
 

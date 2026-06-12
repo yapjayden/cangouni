@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FilterSidebar } from "@/components/dashboard/FilterSidebar";
+import { FilterSidebar, type SortKey } from "@/components/dashboard/FilterSidebar";
 import { ResultsGrid } from "@/components/dashboard/ResultsGrid";
 import { calculateProbabilities } from "@/lib/probability";
 import { colors } from "@/theme";
@@ -16,6 +16,8 @@ export default function DashboardPage() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [minProb, setMinProb] = useState(0);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("recommended");
+  const [labels, setLabels] = useState<string[]>([]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("cgu_profile");
@@ -32,10 +34,18 @@ export default function DashboardPage() {
     }
   }, [router]);
 
+  // Every label (course category) present in the results, for the manual filter.
+  const allLabels = useMemo(() => {
+    const set = new Set<string>();
+    results.forEach(r => r.course.categories.forEach(c => set.add(c)));
+    return [...set].sort();
+  }, [results]);
+
   const filtered = useMemo(() => {
-    return results.filter(r => {
+    const matches = results.filter(r => {
       if (r.admissionChance < minProb) return false;
       if (universities.length > 0 && !universities.includes(r.course.university)) return false;
+      if (labels.length > 0 && !labels.some(l => r.course.categories.includes(l))) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const hay = `${r.course.course} ${r.course.faculty} ${r.course.university}`.toLowerCase();
@@ -43,7 +53,13 @@ export default function DashboardPage() {
       }
       return true;
     });
-  }, [results, minProb, universities, search]);
+
+    const sorted = [...matches];
+    if (sort === "admission") sorted.sort((a, b) => b.admissionChance - a.admissionChance);
+    else if (sort === "match") sorted.sort((a, b) => b.matchScore - a.matchScore);
+    else sorted.sort((a, b) => b.combinedScore - a.combinedScore);
+    return sorted;
+  }, [results, minProb, universities, labels, search, sort]);
 
   if (!profile) {
     return (
@@ -98,6 +114,11 @@ export default function DashboardPage() {
             onMinProbChange={setMinProb}
             search={search}
             onSearchChange={setSearch}
+            sort={sort}
+            onSortChange={setSort}
+            allLabels={allLabels}
+            labels={labels}
+            onLabelsChange={setLabels}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <ResultsGrid results={filtered} />

@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   const filtered = useMemo(() => {
     return results.filter(r => {
-      if (r.probability < minProb) return false;
+      if (r.admissionChance < minProb) return false;
       if (universities.length > 0 && !universities.includes(r.course.university)) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -83,6 +83,10 @@ export default function DashboardPage() {
           </h1>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: colors.muted }}>
             {profile.schoolType} · {scoreLabel} · * = may require interview
+          </p>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: colors.faint, lineHeight: 1.6, marginTop: "10px", maxWidth: "640px" }}>
+            Admission chance is an estimate from past IGP cut-offs — use it to compare courses, not as a guarantee.
+            Match shows how well a course fits your subjects, interests and priorities.
           </p>
         </div>
 

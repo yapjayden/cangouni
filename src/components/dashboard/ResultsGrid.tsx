@@ -11,7 +11,7 @@ export function ResultsGrid({ results }: Props) {
   if (results.length === 0) {
     return (
       <div style={{ padding: "48px", textAlign: "center", color: "#9AA392", fontFamily: "var(--font-ui)" }}>
-        No courses match your filters. Try lowering the minimum probability or clearing university filters.
+        No courses match your filters. Try lowering the minimum admission chance or clearing university filters.
       </div>
     );
   }

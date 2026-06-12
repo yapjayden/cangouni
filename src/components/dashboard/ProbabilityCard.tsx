@@ -7,14 +7,21 @@ interface Props {
   rank: number;
 }
 
-function probColor(p: number) {
+function chanceColor(p: number) {
   if (p >= 70) return "#78BE50";
   if (p >= 40) return "#C4A035";
   return "#9AA392";
 }
 
 export function ProbabilityCard({ result, rank }: Props) {
-  const { course, probability, fitScore, breakdown } = result;
+  const { course, admissionChance, matchScore, matchedLifestyle, reasons } = result;
+
+  // Plain-language match summary, built only from things that actually matched.
+  const matchBits: string[] = [];
+  if (reasons.interests > 0) matchBits.push(`${reasons.interests} interest${reasons.interests > 1 ? "s" : ""}`);
+  if (reasons.subjects > 0) matchBits.push(`${reasons.subjects} subject${reasons.subjects > 1 ? "s" : ""}`);
+  if (reasons.industries > 0) matchBits.push(`${reasons.industries} industry`);
+  if (reasons.resumeHits > 0) matchBits.push(`${reasons.resumeHits} from your resume`);
 
   return (
     <article style={{
@@ -35,12 +42,22 @@ export function ProbabilityCard({ result, rank }: Props) {
           </h3>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "#9AA392" }}>{course.faculty}</p>
         </div>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "32px", color: probColor(probability), lineHeight: 1 }}>
-            {probability}%
+        <div style={{ display: "flex", gap: "20px", flexShrink: 0, textAlign: "right" }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "32px", color: chanceColor(admissionChance), lineHeight: 1 }}>
+              {admissionChance}%
+            </div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "2px" }}>
+              Admission chance
+            </div>
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.08em" }}>
-            FIT {fitScore}%
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "32px", color: "#E8EAE3", lineHeight: 1 }}>
+              {matchScore}%
+            </div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "2px" }}>
+              Match
+            </div>
           </div>
         </div>
       </div>
@@ -51,16 +68,28 @@ export function ProbabilityCard({ result, rank }: Props) {
             {cat}
           </span>
         ))}
-        {course.requiresAssessment && (
+        {reasons.interview && (
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", padding: "3px 8px", border: "0.5px solid rgba(196,160,53,0.4)", color: "#C4A035" }}>
             Interview*
           </span>
         )}
       </div>
 
+      {matchBits.length > 0 && (
+        <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "#9AA392", lineHeight: 1.5 }}>
+          Matches {matchBits.join(" · ")}
+        </div>
+      )}
+
+      {matchedLifestyle.length > 0 && (
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#78BE50", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          ✓ Campus fit · {matchedLifestyle.join(" · ")}
+        </div>
+      )}
+
       <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.06em" }}>
-        Base {breakdown.baseProb}% · Subjects +{breakdown.subjectBoost} · Interest +{breakdown.interestBoost} · Industry +{breakdown.industryBoost} · Resume +{breakdown.resumeBoost}
-        {breakdown.assessmentPenalty > 0 && ` · Assessment -${breakdown.assessmentPenalty}`}
+        Your {reasons.scaleLabel} {reasons.studentScore} vs cut-off {reasons.cutoff}
+        {reasons.interview && " · interview required"}
       </div>
     </article>
   );

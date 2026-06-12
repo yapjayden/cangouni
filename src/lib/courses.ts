@@ -71,6 +71,18 @@ const INDUSTRY_RULES: { pattern: RegExp; tags: string[] }[] = [
   { pattern: /public safety|security/i, tags: ["Government"] },
 ];
 
+// Campus-life traits per university. Labels MUST match the lifestyle options
+// shown in onboarding so a student's priorities can be matched against them.
+// (These describe the university, not the individual course.)
+const UNIVERSITY_LIFESTYLE: Record<University, string[]> = {
+  NUS:  ["Strong hall life", "Research focus", "Sports culture", "Study spaces", "Vibrant social scene", "Overseas exchange", "Startup ecosystem", "Arts & culture"],
+  NTU:  ["Strong hall life", "Research focus", "Sports culture", "Study spaces", "Overseas exchange", "Arts & culture"],
+  SMU:  ["Career-oriented", "Vibrant social scene", "Overseas exchange", "Startup ecosystem", "Close-knit community"],
+  SUTD: ["Research focus", "Startup ecosystem", "Close-knit community", "Study spaces"],
+  SIT:  ["Career-oriented", "Close-knit community", "Sports culture"],
+  SUSS: ["Career-oriented", "Close-knit community"],
+};
+
 function inferTags(text: string, rules: { pattern: RegExp; tags: string[] }[]): string[] {
   const out = new Set<string>();
   for (const { pattern, tags } of rules) {
@@ -92,6 +104,8 @@ function toCourseEntry(c: CourseIGP): CourseEntry {
     degree: "Bachelor",
     duration: 4,
     type: c.polyGPA != null ? "Both" : "JC",
+    rankPoints90: c.rankPoints90,
+    rankPoints70: c.rankPoints70,
     polyGpa10: c.polyGPA,
     polyGpa90: c.polyGPA,
     alGrade10: String(c.rankPoints90),
@@ -101,6 +115,7 @@ function toCourseEntry(c: CourseIGP): CourseEntry {
     categories,
     industries: inferTags(text, INDUSTRY_RULES),
     subjectReqs: inferTags(text, SUBJECT_RULES),
+    lifestyleTags: UNIVERSITY_LIFESTYLE[c.university as University] ?? [],
     resumeKeywords: categories,
     notes: `IGP grades: ${c.aLevelGrades}`,
   };

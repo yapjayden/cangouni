@@ -51,7 +51,7 @@ export function FilterSidebar({
       </div>
 
       <div>
-        <label style={labelStyle}>Min. probability</label>
+        <label style={labelStyle}>Min. admission chance</label>
         <input
           type="range"
           min={0}

@@ -7,6 +7,37 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
   const [status, setStatus] = useState<"idle" | "reading" | "parsing" | "done" | "error">("idle");
   const [filename, setFilename] = useState("");
   const [errorDetail, setErrorDetail] = useState("");
+  const [result, setResult] = useState<ResumeParseResult | null>(null);
+  const [newKeyword, setNewKeyword] = useState("");
+
+  // Store the parse result locally AND push it up, so the keywords can be
+  // shown and edited before the student moves on.
+  function applyResult(r: ResumeParseResult) {
+    setResult(r);
+    onParsed(r);
+  }
+
+  function setKeywords(keywords: string[]) {
+    if (!result) return;
+    const updated = { ...result, keywords };
+    applyResult(updated);
+  }
+
+  function removeKeyword(kw: string) {
+    if (!result) return;
+    setKeywords(result.keywords.filter(k => k !== kw));
+  }
+
+  function addKeyword() {
+    const value = newKeyword.trim();
+    if (!value || !result) return;
+    if (result.keywords.some(k => k.toLowerCase() === value.toLowerCase())) {
+      setNewKeyword("");
+      return;
+    }
+    setKeywords([...result.keywords, value]);
+    setNewKeyword("");
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -17,8 +48,8 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
     setStatus("reading");
 
     try {
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error("File exceeds 5MB limit");
+      if (file.size > 4 * 1024 * 1024) {
+        throw new Error("File exceeds 4MB limit");
       }
 
       let rawText = "";
@@ -50,7 +81,7 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
       if (!parseRes.ok) {
         throw new Error(parseBody.error ?? "AI parsing failed");
       }
-      onParsed(parseBody);
+      applyResult(parseBody);
       setStatus("done");
     } catch (err) {
       setStatus("error");
@@ -96,9 +127,57 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
           {statusText}
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#383E33", letterSpacing: "0.08em" }}>
-          PDF · DOCX · TXT · Max 5MB
+          PDF · DOCX · TXT · Max 4MB
         </div>
       </label>
+
+      {/* Editable keywords — let the student verify what the AI picked up */}
+      {result && result.keywords.length > 0 && (
+        <div style={{ background: "#0F120F", border: "0.5px solid rgba(255,255,255,0.08)", padding: "16px" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#78BE50", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>
+            Detected skills & keywords
+          </div>
+          <div style={{ fontFamily: "var(--font-ui)", fontSize: "11px", color: "#9AA392", marginBottom: "12px", lineHeight: 1.5 }}>
+            Tap × to remove anything wrong, or add what we missed. These drive your course matches.
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
+            {result.keywords.map(kw => (
+              <span key={kw} style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                fontFamily: "var(--font-mono)", fontSize: "9px", padding: "5px 10px",
+                border: "0.5px solid rgba(120,190,80,0.3)", background: "rgba(120,190,80,0.08)",
+                color: "#E8EAE3", letterSpacing: "0.04em",
+              }}>
+                {kw}
+                <button
+                  type="button"
+                  onClick={() => removeKeyword(kw)}
+                  aria-label={`Remove ${kw}`}
+                  style={{ background: "none", border: "none", color: "#9AA392", cursor: "pointer", fontSize: "12px", lineHeight: 1, padding: 0 }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input
+              value={newKeyword}
+              onChange={e => setNewKeyword(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
+              placeholder="Add a skill or achievement..."
+              style={{ flex: 1, background: "#1A1E18", border: "0.5px solid rgba(255,255,255,0.1)", padding: "8px 12px", color: "#E8EAE3", fontFamily: "var(--font-ui)", fontSize: "12px", outline: "none" }}
+            />
+            <button
+              type="button"
+              onClick={addKeyword}
+              style={{ background: "#78BE50", color: "#080A08", border: "none", padding: "8px 16px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}
+            >
+              + Add
+            </button>
+          </div>
+        </div>
+      )}
 
       <div>
         <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#9AA392", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
@@ -111,7 +190,7 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
           onChange={e => {
             const value = e.target.value;
             if (value.trim().length < 10) return;
-            onParsed({
+            applyResult({
               rawText: value,
               keywords: value.split(/\s+/).filter(w => w.length > 4).slice(0, 20),
               detectedInterests: [],

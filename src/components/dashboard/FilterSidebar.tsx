@@ -27,6 +27,9 @@ interface Props {
   allIndustries: string[];
   industries: string[];
   onIndustriesChange: (v: string[]) => void;
+  shortlistOnly: boolean;
+  onShortlistOnlyChange: (v: boolean) => void;
+  shortlistCount: number;
 }
 
 export function FilterSidebar({
@@ -44,6 +47,9 @@ export function FilterSidebar({
   allIndustries,
   industries,
   onIndustriesChange,
+  shortlistOnly,
+  onShortlistOnlyChange,
+  shortlistCount,
 }: Props) {
   const toggleUni = (u: University) => {
     onUniversitiesChange(
@@ -81,6 +87,25 @@ export function FilterSidebar({
           style={inputStyle}
         />
       </div>
+
+      <button
+        type="button"
+        onClick={() => onShortlistOnlyChange(!shortlistOnly)}
+        style={{
+          textAlign: "left",
+          padding: "10px 12px",
+          fontFamily: "var(--font-mono)",
+          fontSize: "9px",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          cursor: "pointer",
+          border: `0.5px solid ${shortlistOnly ? "#78BE50" : "rgba(255,255,255,0.1)"}`,
+          background: shortlistOnly ? "rgba(120,190,80,0.1)" : "transparent",
+          color: shortlistOnly ? "#78BE50" : "#9AA392",
+        }}
+      >
+        {shortlistOnly ? "★ Showing shortlist" : "☆ Shortlist only"} ({shortlistCount})
+      </button>
 
       <div>
         <label style={labelStyle}>Sort by</label>

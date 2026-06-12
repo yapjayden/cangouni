@@ -7,6 +7,14 @@ import { FilterSidebar, type SortKey } from "@/components/dashboard/FilterSideba
 import { ResultsGrid } from "@/components/dashboard/ResultsGrid";
 import { CompareTray } from "@/components/dashboard/CompareTray";
 import { calculateProbabilities } from "@/lib/probability";
+import {
+  loadProfile,
+  saveProfile,
+  loadBookmarks,
+  saveBookmarks,
+  encodeProfile,
+  decodeProfile,
+} from "@/lib/storage";
 import { colors } from "@/theme";
 import type { ProbabilityResult, University, UserProfile } from "@/types";
 
@@ -21,6 +29,9 @@ export default function DashboardPage() {
   const [labels, setLabels] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [shortlistOnly, setShortlistOnly] = useState(false);
+  const [shareLabel, setShareLabel] = useState("Share");
 
   const COMPARE_MAX = 4;
   const toggleCompare = (id: string) =>
@@ -28,19 +39,26 @@ export default function DashboardPage() {
       prev.includes(id) ? prev.filter(x => x !== id) : prev.length < COMPARE_MAX ? [...prev, id] : prev
     );
 
+  const toggleBookmark = (id: string) =>
+    setBookmarks(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      saveBookmarks(next);
+      return next;
+    });
+
   useEffect(() => {
-    const raw = sessionStorage.getItem("cgu_profile");
-    if (!raw) {
+    // A shared link (?p=...) takes precedence and is saved as the active profile.
+    const shared = new URLSearchParams(window.location.search).get("p");
+    const fromLink = shared ? decodeProfile(shared) : null;
+    const p = fromLink ?? loadProfile();
+    if (!p) {
       router.replace("/onboard");
       return;
     }
-    try {
-      const p = JSON.parse(raw) as UserProfile;
-      setProfile(p);
-      setResults(calculateProbabilities(p));
-    } catch {
-      router.replace("/onboard");
-    }
+    if (fromLink) saveProfile(p);
+    setProfile(p);
+    setResults(calculateProbabilities(p));
+    setBookmarks(loadBookmarks());
   }, [router]);
 
   // Every label (course category) and industry present in the results, for the manual filters.
@@ -58,6 +76,7 @@ export default function DashboardPage() {
 
   const filtered = useMemo(() => {
     const matches = results.filter(r => {
+      if (shortlistOnly && !bookmarks.includes(r.course.id)) return false;
       if (r.admissionChance < minProb) return false;
       if (universities.length > 0 && !universities.includes(r.course.university)) return false;
       if (labels.length > 0 && !labels.some(l => r.course.categories.includes(l))) return false;
@@ -75,7 +94,44 @@ export default function DashboardPage() {
     else if (sort === "match") sorted.sort((a, b) => b.matchScore - a.matchScore);
     else sorted.sort((a, b) => b.combinedScore - a.combinedScore);
     return sorted;
-  }, [results, minProb, universities, labels, industries, search, sort]);
+  }, [results, minProb, universities, labels, industries, search, sort, shortlistOnly, bookmarks]);
+
+  // Copy a shareable link that re-creates these results from the profile alone.
+  async function share() {
+    if (!profile) return;
+    const url = `${window.location.origin}/dashboard?p=${encodeProfile(profile)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareLabel("Link copied!");
+    } catch {
+      setShareLabel("Copy failed");
+    }
+    setTimeout(() => setShareLabel("Share"), 2000);
+  }
+
+  // Download the currently-shown ranking as a CSV.
+  function downloadCsv() {
+    const head = ["Rank", "University", "Course", "Faculty", "Admission chance %", "Match %", "Your score", "Cut-off", "Shortlisted"];
+    const rows = filtered.map((r, i) => [
+      i + 1,
+      r.course.university,
+      r.course.course,
+      r.course.faculty,
+      r.admissionChance,
+      r.matchScore,
+      `${r.reasons.scaleLabel} ${r.reasons.studentScore}`,
+      r.reasons.cutoff,
+      bookmarks.includes(r.course.id) ? "yes" : "",
+    ]);
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = [head, ...rows].map(row => row.map(esc).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cangouni-results.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   // The selected courses, in the order the user picked them, for the compare tray.
   const compareSelected = useMemo(
@@ -105,7 +161,9 @@ export default function DashboardPage() {
         <Link href="/" style={{ textDecoration: "none", color: colors.text, fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "20px" }}>
           Can<span style={{ color: colors.accent }}>Go</span>Uni
         </Link>
-        <nav style={{ display: "flex", gap: "12px" }}>
+        <nav style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <button onClick={share} style={navBtnStyle}>{shareLabel}</button>
+          <button onClick={downloadCsv} style={navBtnStyle}>Download</button>
           <Link href="/onboard" style={navLinkStyle}>Edit profile</Link>
           <Link href="/chat" style={{ ...navLinkStyle, background: colors.accent, color: colors.bg, border: "none" }}>AI Advisor →</Link>
         </nav>
@@ -144,6 +202,9 @@ export default function DashboardPage() {
             allIndustries={allIndustries}
             industries={industries}
             onIndustriesChange={setIndustries}
+            shortlistOnly={shortlistOnly}
+            onShortlistOnlyChange={setShortlistOnly}
+            shortlistCount={bookmarks.length}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <ResultsGrid
@@ -151,6 +212,8 @@ export default function DashboardPage() {
               compareIds={compareIds}
               onToggleCompare={toggleCompare}
               compareLimitReached={compareIds.length >= COMPARE_MAX}
+              bookmarks={bookmarks}
+              onToggleBookmark={toggleBookmark}
             />
           </div>
         </div>
@@ -174,4 +237,10 @@ const navLinkStyle: React.CSSProperties = {
   border: "0.5px solid rgba(255,255,255,0.12)",
   color: colors.muted,
   textDecoration: "none",
+};
+
+const navBtnStyle: React.CSSProperties = {
+  ...navLinkStyle,
+  background: "transparent",
+  cursor: "pointer",
 };

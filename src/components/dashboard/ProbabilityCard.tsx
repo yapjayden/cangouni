@@ -9,6 +9,8 @@ interface Props {
   compareSelected?: boolean;
   onToggleCompare?: (id: string) => void;
   compareDisabled?: boolean;
+  bookmarked?: boolean;
+  onToggleBookmark?: (id: string) => void;
 }
 
 function chanceColor(p: number) {
@@ -58,7 +60,7 @@ function RingStat({ value, label, color, numberColor }: { value: number; label: 
   );
 }
 
-export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare, compareDisabled }: Props) {
+export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare, compareDisabled, bookmarked, onToggleBookmark }: Props) {
   const { course, admissionChance, matchScore, matchedLifestyle, reasons } = result;
 
   // Plain-language "why this fits", naming the actual things that matched.
@@ -79,8 +81,24 @@ export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#78BE50", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
-            #{rank} · {course.university}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#78BE50", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              #{rank} · {course.university}
+            </span>
+            {onToggleBookmark && (
+              <button
+                type="button"
+                onClick={() => onToggleBookmark(course.id)}
+                aria-label={bookmarked ? "Remove from shortlist" : "Add to shortlist"}
+                title={bookmarked ? "Remove from shortlist" : "Add to shortlist"}
+                style={{
+                  background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1,
+                  fontSize: "14px", color: bookmarked ? "#78BE50" : "#9AA392",
+                }}
+              >
+                {bookmarked ? "★" : "☆"}
+              </button>
+            )}
           </div>
           <h3 style={{ fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "16px", color: "#E8EAE3", marginBottom: "4px" }}>
             {course.course}

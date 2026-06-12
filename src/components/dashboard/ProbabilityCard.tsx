@@ -59,7 +59,7 @@ export function ProbabilityCard({ result, rank }: Props) {
       </div>
 
       <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.06em" }}>
-        Base {breakdown.baseProb}% · Interest +{breakdown.interestBoost} · Industry +{breakdown.industryBoost} · Resume +{breakdown.resumeBoost}
+        Base {breakdown.baseProb}% · Subjects +{breakdown.subjectBoost} · Interest +{breakdown.interestBoost} · Industry +{breakdown.industryBoost} · Resume +{breakdown.resumeBoost}
         {breakdown.assessmentPenalty > 0 && ` · Assessment -${breakdown.assessmentPenalty}`}
       </div>
     </article>

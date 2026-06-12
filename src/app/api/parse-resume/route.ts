@@ -1,5 +1,5 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { generateContentResilient } from "@/lib/gemini";
 import type { ResumeParseResult } from "@/types";
 
 export const runtime = "nodejs";
@@ -53,9 +53,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
     const prompt = `Analyse this student's resume and return ONLY valid JSON — no markdown, no explanation.
 
 Resume:
@@ -70,8 +67,8 @@ Return exactly:
   "detectedIndustries": ["inferred industries e.g. Technology, Finance, Healthcare, Education, Government, Consulting, Media, Engineering, Biotech, Legal, Marketing, Logistics"]
 }`;
 
-    const result = await model.generateContent(prompt);
-    const cleaned = result.response.text().replace(/```json|```/g, "").trim();
+    const raw = await generateContentResilient(apiKey, [prompt]);
+    const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
     return NextResponse.json({

@@ -34,6 +34,14 @@ function calcIndustryBoost(course: CourseEntry, profile: UserProfile): number {
   return Math.min(matches * 2, 8);
 }
 
+function calcSubjectBoost(course: CourseEntry, profile: UserProfile): number {
+  if (!profile.subjects?.length || !course.subjectReqs?.length) return 0;
+  const matches = course.subjectReqs.filter(req =>
+    profile.subjects.some(s => s.toLowerCase() === req.toLowerCase())
+  ).length;
+  return Math.min(matches * 4, 12);
+}
+
 function calcResumeBoost(course: CourseEntry, profile: UserProfile): number {
   if (!profile.resumeKeywords?.length) return 0;
   const text = `${course.course} ${course.categories.join(" ")} ${course.industries.join(" ")}`.toLowerCase();
@@ -46,19 +54,25 @@ function calcFitScore(course: CourseEntry, profile: UserProfile): number {
   const matchedInterests = course.categories.filter(cat =>
     profile.interests.some(i => i.toLowerCase() === cat.toLowerCase())
   ).length;
-  const interestScore = (matchedInterests / totalCats) * 40;
+  const interestScore = (matchedInterests / totalCats) * 35;
 
   const totalInds = Math.max(course.industries.length, 1);
   const matchedInds = course.industries.filter(ind =>
     profile.preferredIndustries.some(pi => pi.toLowerCase().includes(ind.toLowerCase()))
   ).length;
-  const industryScore = (matchedInds / totalInds) * 35;
+  const industryScore = (matchedInds / totalInds) * 25;
+
+  const totalReqs = Math.max(course.subjectReqs.length, 1);
+  const matchedReqs = course.subjectReqs.filter(req =>
+    profile.subjects.some(s => s.toLowerCase() === req.toLowerCase())
+  ).length;
+  const subjectScore = (matchedReqs / totalReqs) * 20;
 
   const text = `${course.course} ${course.categories.join(" ")}`.toLowerCase();
   const matchedKws = (profile.resumeKeywords ?? []).filter(k => k.length > 3 && text.includes(k.toLowerCase())).length;
-  const resumeScore = Math.min(matchedKws / 5, 1) * 25;
+  const resumeScore = Math.min(matchedKws / 5, 1) * 20;
 
-  return Math.round(interestScore + industryScore + resumeScore);
+  return Math.round(interestScore + industryScore + subjectScore + resumeScore);
 }
 
 export function calculateProbabilities(profile: UserProfile): ProbabilityResult[] {
@@ -69,13 +83,14 @@ export function calculateProbabilities(profile: UserProfile): ProbabilityResult[
     .map(course => {
       const threshold = igpThreshold(course, profile);
       const baseProb = calcBaseProbability(score, threshold);
+      const subjectBoost = calcSubjectBoost(course, profile);
       const interestBoost = calcInterestBoost(course, profile);
       const industryBoost = calcIndustryBoost(course, profile);
       const resumeBoost = calcResumeBoost(course, profile);
       const penalty = course.requiresAssessment ? 5 : 0;
 
       const probability = Math.round(
-        Math.max(5, Math.min(95, baseProb + interestBoost + industryBoost + resumeBoost - penalty))
+        Math.max(5, Math.min(95, baseProb + subjectBoost + interestBoost + industryBoost + resumeBoost - penalty))
       );
       const fitScore = calcFitScore(course, profile);
       const combinedScore = probability * 0.6 + fitScore * 0.4;
@@ -88,6 +103,7 @@ export function calculateProbabilities(profile: UserProfile): ProbabilityResult[
         label: `${probability}%${course.requiresAssessment ? "*" : ""}`,
         breakdown: {
           baseProb: Math.round(baseProb),
+          subjectBoost,
           interestBoost,
           industryBoost,
           resumeBoost,

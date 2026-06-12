@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CanGoUni
 
-## Getting Started
+> *Eh, can go uni or not?* — university admission probabilities for Singapore JC & Poly students.
 
-First, run the development server:
+Enter your grades, upload a resume, pick your interests, and CanGoUni matches you
+against real IGP (Indicative Grade Profile) data across all 6 local universities —
+then estimates your admission chance for every course and lets you chat with an AI advisor.
+
+## Tech stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Google Gemini** (`@google/generative-ai`) for resume parsing & the AI advisor
+- Styling is done with **inline `style={{ }}` objects** — there is no CSS framework in
+  use. Brand colors & fonts live in one place: [`src/theme.ts`](src/theme.ts).
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Other scripts: `npm run build` (production build), `npm run start` (serve the build),
+`npm run lint`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the project root:
 
-## Learn More
+```
+GEMINI_API_KEY=your_google_gemini_api_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+The resume parser (`/api/parse-resume`) and AI advisor (`/api/chat`) need this key.
+Everything else (probability scoring, filtering) runs without it.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How it works
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Onboard** (`/onboard`) — a 5-step form (grades → resume → interests → industries →
+   lifestyle). The profile is saved to `sessionStorage` under `cgu_profile` — nothing
+   is sent to a server or database.
+2. **Dashboard** (`/dashboard`) — reads that profile, runs the scoring engine, and shows
+   every course ranked by your chances, with filters.
+3. **Chat** (`/chat`) — an AI advisor that answers questions using your profile as context.
 
-## Deploy on Vercel
+## Project map
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/                      # Next.js App Router — each folder is a route
+│   ├── page.tsx              # Landing page
+│   ├── onboard/page.tsx      # 5-step profile form
+│   ├── dashboard/page.tsx    # Ranked course results + filters
+│   ├── chat/page.tsx         # AI advisor chat
+│   ├── layout.tsx            # Root layout — loads fonts, sets metadata
+│   ├── globals.css           # Global resets
+│   └── api/                  # Server routes (run on the backend)
+│       ├── chat/             # Streams AI advisor replies (Gemini)
+│       ├── parse-resume/     # Extracts text + keywords from an uploaded resume
+│       └── probability/      # Scoring endpoint
+│
+├── components/               # Reusable UI, grouped by feature
+│   ├── chat/                 # ChatBubble, ChatInput, ChatThread
+│   ├── dashboard/            # FilterSidebar, ProbabilityCard, ResultsGrid
+│   └── onboard/steps/        # Interests, Industries, ResumeUpload
+│
+├── lib/                      # Business logic (no UI)
+│   ├── probability.ts        # The admission-chance scoring engine
+│   ├── courses.ts            # Course lookup / matching helpers
+│   └── pdf-extract.ts        # Pulls text out of uploaded PDFs
+│
+├── data/
+│   └── igp.ts                # The course dataset (IGP cut-off points)
+│
+├── types/index.ts            # Shared TypeScript types (UserProfile, CourseEntry, …)
+└── theme.ts                  # 🎨 Brand colors & fonts — edit here to restyle
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Common edits — where to look
+
+| I want to…                          | Edit this                                         |
+| ----------------------------------- | ------------------------------------------------- |
+| Change brand colors / fonts         | `src/theme.ts`                                    |
+| Add or update a course              | `src/data/igp.ts`                                 |
+| Tweak how chances are calculated    | `src/lib/probability.ts`                          |
+| Change the onboarding questions     | `src/app/onboard/page.tsx` + `components/onboard/`|
+| Change the AI advisor's behaviour   | `src/app/api/chat/route.ts`                       |
+| Edit the landing page               | `src/app/page.tsx`                                |
+
+> **Note on data:** A user's profile lives only in their browser (`sessionStorage`).
+> Refreshing keeps it; closing the tab clears it. There is no database.

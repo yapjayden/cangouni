@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "@/components/chat/ChatThread";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { colors } from "@/theme";
 import type { UserProfile } from "@/types";
 
 const STARTERS = [
@@ -85,24 +86,24 @@ export default function ChatPage() {
 
   if (!profile) {
     return (
-      <main style={{ minHeight: "100vh", background: "#080A08", display: "flex", alignItems: "center", justifyContent: "center", color: "#9AA392" }}>
+      <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", color: colors.muted }}>
         Loading…
       </main>
     );
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#080A08", color: "#E8EAE3", display: "flex", flexDirection: "column" }}>
+    <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text, display: "flex", flexDirection: "column" }}>
       <header style={{
         height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 32px", borderBottom: "1px solid rgba(255,255,255,0.07)",
         flexShrink: 0,
       }}>
-        <Link href="/dashboard" style={{ textDecoration: "none", color: "#9AA392", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em" }}>
+        <Link href="/dashboard" style={{ textDecoration: "none", color: colors.muted, fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em" }}>
           ← Back to results
         </Link>
         <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "18px" }}>AI Advisor</span>
-        <Link href="/onboard" style={{ textDecoration: "none", color: "#9AA392", fontFamily: "var(--font-mono)", fontSize: "10px" }}>
+        <Link href="/onboard" style={{ textDecoration: "none", color: colors.muted, fontFamily: "var(--font-mono)", fontSize: "10px" }}>
           Edit profile
         </Link>
       </header>
@@ -122,7 +123,7 @@ export default function ChatPage() {
                   padding: "8px 12px",
                   border: "0.5px solid rgba(255,255,255,0.12)",
                   background: "transparent",
-                  color: "#9AA392",
+                  color: colors.muted,
                   cursor: "pointer",
                   textAlign: "left",
                 }}

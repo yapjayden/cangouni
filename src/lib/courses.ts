@@ -45,6 +45,19 @@ const CATEGORY_RULES: { pattern: RegExp; tags: string[] }[] = [
   { pattern: /music|theatre|dance/i, tags: ["arts"] },
 ];
 
+// Relevant / recommended subjects per course, inferred from the course name.
+// Labels MUST match the SUBJECTS list shown in onboarding so they can be matched.
+const SUBJECT_RULES: { pattern: RegExp; tags: string[] }[] = [
+  { pattern: /engineer|architecture|built|aerospace|mechanical|electrical|civil|robot/i, tags: ["Mathematics", "Physics"] },
+  { pattern: /computer|computing|info|ict|software|data|analytics|ai|artificial|game/i, tags: ["Mathematics", "Computing"] },
+  { pattern: /medic|nurs|dentist|pharm|health|biolog|life science|biotech/i, tags: ["Biology", "Chemistry"] },
+  { pattern: /business|account|finance|econom|bank|commerce|management|fintech/i, tags: ["Mathematics", "Economics"] },
+  { pattern: /\bscience\b|physic|chemi/i, tags: ["Chemistry", "Mathematics"] },
+  { pattern: /design|fine art|creative|media|interactive/i, tags: ["Art & Design"] },
+  { pattern: /law|legal/i, tags: ["Literature", "History"] },
+  { pattern: /psycholog|social|sociolog|humanities|communicat|arts|geograph/i, tags: ["Literature", "Geography"] },
+];
+
 const INDUSTRY_RULES: { pattern: RegExp; tags: string[] }[] = [
   { pattern: /law|legal/i, tags: ["Legal"] },
   { pattern: /medic|nurs|dentist|pharm|health/i, tags: ["Healthcare"] },
@@ -87,7 +100,7 @@ function toCourseEntry(c: CourseIGP): CourseEntry {
     trend: "stable",
     categories,
     industries: inferTags(text, INDUSTRY_RULES),
-    subjectReqs: [],
+    subjectReqs: inferTags(text, SUBJECT_RULES),
     resumeKeywords: categories,
     notes: `IGP grades: ${c.aLevelGrades}`,
   };

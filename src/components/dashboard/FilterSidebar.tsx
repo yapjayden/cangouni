@@ -157,7 +157,7 @@ export function FilterSidebar({
         <button
           type="button"
           onClick={() => onUniversitiesChange([])}
-          style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", background: "none", border: "none", cursor: "pointer" }}
+          style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#6B7566", background: "none", border: "none", cursor: "pointer" }}
         >
           Show all
         </button>
@@ -195,7 +195,7 @@ export function FilterSidebar({
             <button
               type="button"
               onClick={() => onLabelsChange([])}
-              style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", background: "none", border: "none", cursor: "pointer" }}
+              style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#6B7566", background: "none", border: "none", cursor: "pointer" }}
             >
               Clear labels
             </button>
@@ -235,7 +235,7 @@ export function FilterSidebar({
             <button
               type="button"
               onClick={() => onIndustriesChange([])}
-              style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", background: "none", border: "none", cursor: "pointer" }}
+              style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#6B7566", background: "none", border: "none", cursor: "pointer" }}
             >
               Clear industries
             </button>

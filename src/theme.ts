@@ -18,7 +18,7 @@ export const colors = {
 
   text: "#E8EAE3", // primary text
   muted: "#9AA392", // secondary text
-  faint: "#383E33", // tertiary text & subtle dividers
+  faint: "#6B7566", // tertiary text & subtle dividers (brighter than before)
 
   accent: "#78BE50", // brand green
 } as const;

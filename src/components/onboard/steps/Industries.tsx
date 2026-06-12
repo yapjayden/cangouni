@@ -70,7 +70,7 @@ export function Industries({ selected, onChange, suggestedFromResume = [] }: Pro
               <span style={{ fontSize: "18px", lineHeight: 1 }}>{ind.icon}</span>
               <div>
                 <div style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 600, color: on ? "#E8EAE3" : "#9AA392", marginBottom: "3px" }}>{ind.id}</div>
-                <div style={{ fontFamily: "var(--font-ui)", fontSize: "11px", color: "#383E33", lineHeight: 1.4 }}>{ind.desc}</div>
+                <div style={{ fontFamily: "var(--font-ui)", fontSize: "11px", color: "#6B7566", lineHeight: 1.4 }}>{ind.desc}</div>
               </div>
             </button>
           );

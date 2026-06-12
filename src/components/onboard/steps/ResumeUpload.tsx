@@ -126,7 +126,7 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
         }}>
           {statusText}
         </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#383E33", letterSpacing: "0.08em" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#6B7566", letterSpacing: "0.08em" }}>
           PDF · DOCX · TXT · Max 4MB
         </div>
       </label>

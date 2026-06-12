@@ -1,6 +1,7 @@
 "use client";
 
 import type { ProbabilityResult } from "@/types";
+import { colors } from "@/theme";
 
 interface Props {
   result: ProbabilityResult;
@@ -11,6 +12,47 @@ function chanceColor(p: number) {
   if (p >= 70) return "#78BE50";
   if (p >= 40) return "#C4A035";
   return "#9AA392";
+}
+
+/** A percentage shown inside a ring whose fill tracks the value, with a label centred below. */
+function RingStat({ value, label, color, numberColor }: { value: number; label: string; color: string; numberColor: string }) {
+  const size = 66;
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - Math.max(0, Math.min(100, value)) / 100);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", width: "84px" }}>
+      <div style={{ position: "relative", width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={stroke} />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={stroke}
+            strokeDasharray={circ}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+          />
+        </svg>
+        <div style={{
+          position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "var(--font-display)", fontSize: "20px", color: numberColor, lineHeight: 1,
+        }}>
+          {value}%
+        </div>
+      </div>
+      <div style={{
+        fontFamily: "var(--font-mono)", fontSize: "8px", color: "#D4DACC",
+        letterSpacing: "0.08em", textTransform: "uppercase", textAlign: "center", lineHeight: 1.3,
+      }}>
+        {label}
+      </div>
+    </div>
+  );
 }
 
 export function ProbabilityCard({ result, rank }: Props) {
@@ -42,23 +84,9 @@ export function ProbabilityCard({ result, rank }: Props) {
           </h3>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "#9AA392" }}>{course.faculty}</p>
         </div>
-        <div style={{ display: "flex", gap: "20px", flexShrink: 0, textAlign: "right" }}>
-          <div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "32px", color: chanceColor(admissionChance), lineHeight: 1 }}>
-              {admissionChance}%
-            </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "2px" }}>
-              Admission chance
-            </div>
-          </div>
-          <div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "32px", color: "#E8EAE3", lineHeight: 1 }}>
-              {matchScore}%
-            </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "2px" }}>
-              Match
-            </div>
-          </div>
+        <div style={{ display: "flex", gap: "16px", flexShrink: 0 }}>
+          <RingStat value={admissionChance} label="Admission chance" color={chanceColor(admissionChance)} numberColor={chanceColor(admissionChance)} />
+          <RingStat value={matchScore} label="Match" color={colors.accent} numberColor="#E8EAE3" />
         </div>
       </div>
 
@@ -87,7 +115,7 @@ export function ProbabilityCard({ result, rank }: Props) {
         </div>
       )}
 
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", letterSpacing: "0.06em" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#C8CEC0", letterSpacing: "0.06em" }}>
         Your {reasons.scaleLabel} {reasons.studentScore} vs cut-off {reasons.cutoff}
         {reasons.interview && " · interview required"}
       </div>

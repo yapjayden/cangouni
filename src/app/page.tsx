@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { colors } from "@/theme";
+import { loadProfile } from "@/lib/storage";
+import type { UserProfile } from "@/types";
 
 const btnPrimary: React.CSSProperties = {
   background: colors.accent,
@@ -18,7 +21,12 @@ const btnPrimary: React.CSSProperties = {
 
 export default function LandingPage() {
   const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+  useEffect(() => {
+    setProfile(loadProfile());
+  }, []);
 
   return (
     <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text, fontFamily: "var(--font-ui), sans-serif" }}>
@@ -35,7 +43,13 @@ export default function LandingPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
           <button type="button" onClick={() => scrollTo("features")} style={navBtn}>Courses</button>
           <button type="button" onClick={() => scrollTo("how-it-works")} style={navBtn}>About</button>
-          <button type="button" onClick={() => router.push("/onboard")} style={{ ...btnPrimary, padding: "10px 20px", fontSize: "13px" }}>Get Started</button>
+          {profile ? (
+            <Link href="/profile" style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", borderRadius: "50%", background: colors.accent, color: colors.bg, fontWeight: 700, fontSize: "16px" }} title="Profile">
+              {profile.schoolType === "JC" ? "J" : "P"}
+            </Link>
+          ) : (
+            <button type="button" onClick={() => router.push("/onboard")} style={{ ...btnPrimary, padding: "10px 20px", fontSize: "13px" }}>Get Started</button>
+          )}
         </div>
       </nav>
 

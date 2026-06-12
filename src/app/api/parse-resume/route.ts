@@ -53,16 +53,21 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const prompt = `Analyse this student's resume and return ONLY valid JSON — no markdown, no explanation.
+    const prompt = `Analyse this student's resume and extract ONLY technical skills, programming languages, frameworks, tools, roles held, and academic achievements.
+
+IMPORTANT:
+- Exclude: month/year dates, company names, university names, generic resume headers, contact info, section titles
+- Focus only on: programming languages (Python, Java, etc), frameworks (React, Django, etc), tools (Git, Docker, etc), soft skills (leadership, communication), roles (Software Engineer, Data Analyst, etc), specific achievements or certifications
+- Return max 25 items, only items relevant to university/career prospects
 
 Resume:
 """
 ${trimmed.slice(0, 4000)}
 """
 
-Return exactly:
+Return ONLY valid JSON — no markdown, no explanation:
 {
-  "keywords": ["skills, tools, roles, subjects, achievements — max 30 items"],
+  "keywords": ["only technical skills, tools, frameworks, roles, achievements"],
   "detectedInterests": ["from: technology, AI, computing, engineering, business, finance, fintech, law, medicine, healthcare, design, architecture, data, analytics, social sciences, psychology, communications, science, biotech, economics, marketing, supply chain, games, arts"],
   "detectedIndustries": ["inferred industries e.g. Technology, Finance, Healthcare, Education, Government, Consulting, Media, Engineering, Biotech, Legal, Marketing, Logistics"]
 }`;
@@ -71,9 +76,30 @@ Return exactly:
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
+    // Post-process keywords to filter out common false positives
+    const commonFalsePositives = [
+      "resume", "profile", "experience", "education", "skills", "summary",
+      "contact", "information", "phone", "email", "address", "linkedin",
+      "pdf", "document", "january", "february", "march", "april", "may", "june",
+      "july", "august", "september", "october", "november", "december",
+      "2020", "2021", "2022", "2023", "2024", "2025", "2026",
+      "i", "a", "the", "and", "or", "in", "at", "to", "for", "by", "with",
+    ];
+
+    const filtered = (parsed.keywords ?? [])
+      .filter((k: string) => {
+        const lower = k.toLowerCase().trim();
+        // Skip if it's a common false positive
+        if (commonFalsePositives.includes(lower)) return false;
+        // Skip if it's just a month/year or single letter
+        if (lower.match(/^\d{4}$|^[a-z]$/)) return false;
+        return true;
+      })
+      .slice(0, 25);
+
     return NextResponse.json({
       rawText: trimmed,
-      keywords: parsed.keywords ?? [],
+      keywords: filtered,
       detectedInterests: parsed.detectedInterests ?? [],
       detectedIndustries: parsed.detectedIndustries ?? [],
     } satisfies ResumeParseResult);

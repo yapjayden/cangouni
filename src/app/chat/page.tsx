@@ -70,7 +70,12 @@ export default function ChatPage() {
         }),
       });
 
-      if (!res.ok || !res.body) throw new Error("Chat failed");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `HTTP ${res.status}`);
+      }
+
+      if (!res.body) throw new Error("No response body");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -86,12 +91,14 @@ export default function ChatPage() {
           return copy;
         });
       }
-    } catch {
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : "Unknown error";
+      console.error("Chat error:", errMsg);
       setMessages(prev => {
         const copy = [...prev];
         copy[assistantIdx] = {
           role: "assistant",
-          content: "Sorry, I couldn't respond. Check your GEMINI_API_KEY in .env.local and try again.",
+          content: `Sorry, I couldn't respond: ${errMsg}. Make sure the API key is set correctly.`,
         };
         return copy;
       });

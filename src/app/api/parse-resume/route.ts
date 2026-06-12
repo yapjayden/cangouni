@@ -53,21 +53,34 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const prompt = `Analyse this student's resume and extract ONLY technical skills, programming languages, frameworks, tools, roles held, and academic achievements.
+    const prompt = `You are parsing a student's resume. EXTRACT ONLY TRUE TECHNICAL SKILLS.
 
-IMPORTANT:
-- Exclude: month/year dates, company names, university names, generic resume headers, contact info, section titles
-- Focus only on: programming languages (Python, Java, etc), frameworks (React, Django, etc), tools (Git, Docker, etc), soft skills (leadership, communication), roles (Software Engineer, Data Analyst, etc), specific achievements or certifications
-- Return max 25 items, only items relevant to university/career prospects
+Skip anything that looks like:
+- Document headers, dates, months, years, phone numbers, emails
+- Company or university names
+- Generic section titles (Experience, Education, Contact, Profile, Summary)
+- Common resume words (resume, curriculum, vitae, pdf, document)
+- Filler words (the, and, or, a, an, to, for, in, at, by, with, is, are)
+- Pronouns (i, me, my, they, he, she, it)
 
-Resume:
+INCLUDE ONLY:
+- Programming languages: Python, Java, C++, JavaScript, React, etc
+- Tools & platforms: Docker, Git, AWS, GCP, Figma, etc
+- Frameworks & libraries: Django, Spring, Node.js, Vue, etc
+- Certifications: AWS Solutions Architect, Google Cloud Professional, etc
+- Technical roles: Software Engineer, Data Scientist, DevOps Engineer, etc
+- Specific achievements with numbers/impact: "Led team of 5", "Reduced latency by 40%", etc
+
+Examples of BAD keywords to SKIP: "resume", "profile", "john", "smith", "2024", "january", "contact", "acme corp", "stanford university"
+
+Resume text (ignore first ~100 words as they're often headers):
 """
-${trimmed.slice(0, 4000)}
+${trimmed.slice(400, 4400)}
 """
 
-Return ONLY valid JSON — no markdown, no explanation:
+Return ONLY valid JSON — no markdown, no extra text:
 {
-  "keywords": ["only technical skills, tools, frameworks, roles, achievements"],
+  "keywords": ["only true technical skills, tools, roles, certifications"],
   "detectedInterests": ["from: technology, AI, computing, engineering, business, finance, fintech, law, medicine, healthcare, design, architecture, data, analytics, social sciences, psychology, communications, science, biotech, economics, marketing, supply chain, games, arts"],
   "detectedIndustries": ["inferred industries e.g. Technology, Finance, Healthcare, Education, Government, Consulting, Media, Engineering, Biotech, Legal, Marketing, Logistics"]
 }`;
@@ -76,26 +89,50 @@ Return ONLY valid JSON — no markdown, no explanation:
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
-    // Post-process keywords to filter out common false positives
-    const commonFalsePositives = [
-      "resume", "profile", "experience", "education", "skills", "summary",
-      "contact", "information", "phone", "email", "address", "linkedin",
-      "pdf", "document", "january", "february", "march", "april", "may", "june",
+    // Aggressive post-processing to remove false positives
+    const commonFalsePositives = new Set([
+      "resume", "profile", "experience", "education", "skills", "summary", "objective",
+      "contact", "information", "phone", "email", "address", "linkedin", "github",
+      "pdf", "document", "curriculum", "vitae", "cv", "attachment", "etc",
+      // Months
+      "january", "february", "march", "april", "may", "june",
       "july", "august", "september", "october", "november", "december",
-      "2020", "2021", "2022", "2023", "2024", "2025", "2026",
-      "i", "a", "the", "and", "or", "in", "at", "to", "for", "by", "with",
-    ];
+      "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
+      // Years
+      "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026",
+      // Common names / company names
+      "john", "jane", "smith", "johnson", "williams", "corporation", "inc", "ltd",
+      // Generic words
+      "i", "a", "the", "and", "or", "in", "at", "to", "for", "by", "with", "is",
+      "are", "was", "were", "be", "been", "being", "have", "has", "do", "does",
+      "me", "my", "we", "our", "they", "he", "she", "it", "us",
+    ]);
 
     const filtered = (parsed.keywords ?? [])
       .filter((k: string) => {
         const lower = k.toLowerCase().trim();
-        // Skip if it's a common false positive
-        if (commonFalsePositives.includes(lower)) return false;
-        // Skip if it's just a month/year or single letter
-        if (lower.match(/^\d{4}$|^[a-z]$/)) return false;
+
+        // Skip if empty or too short
+        if (lower.length < 3) return false;
+
+        // Skip if it's a known false positive
+        if (commonFalsePositives.has(lower)) return false;
+
+        // Skip if it's just numbers (years, dates, phone)
+        if (/^\d+$/.test(lower)) return false;
+
+        // Skip if it's a single letter
+        if (/^[a-z]$/.test(lower)) return false;
+
+        // Skip if it looks like a date (e.g., "12/2024", "Dec 2023")
+        if (/^\d{1,2}\/\d{4}$|^\w+ \d{4}$/.test(lower)) return false;
+
+        // Skip if it starts with a number (likely a list item)
+        if (/^\d/.test(lower)) return false;
+
         return true;
       })
-      .slice(0, 25);
+      .slice(0, 20);
 
     return NextResponse.json({
       rawText: trimmed,

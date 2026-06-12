@@ -136,7 +136,7 @@ export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare
               cursor: !compareSelected && compareDisabled ? "not-allowed" : "pointer",
               border: `0.5px solid ${compareSelected ? "#78BE50" : "rgba(255,255,255,0.14)"}`,
               background: compareSelected ? "rgba(120,190,80,0.12)" : "transparent",
-              color: compareSelected ? "#78BE50" : (compareDisabled ? "#383E33" : "#9AA392"),
+              color: compareSelected ? "#78BE50" : (compareDisabled ? "#5A5F54" : "#9AA392"),
             }}
           >
             {compareSelected ? "✓ Comparing" : "+ Compare"}

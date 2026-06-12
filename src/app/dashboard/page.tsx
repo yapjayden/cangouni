@@ -82,7 +82,7 @@ export default function DashboardPage() {
             {filtered.length} courses ranked for you
           </h1>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: colors.muted }}>
-            {profile.schoolType} · {scoreLabel} · {profile.institution || "No institution"} · * = may require interview
+            {profile.schoolType} · {scoreLabel} · * = may require interview
           </p>
         </div>
 

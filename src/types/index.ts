@@ -5,10 +5,9 @@ export type Trend = "rising" | "stable" | "falling";
 export interface UserProfile {
   // Step 1 — Academic
   schoolType: SchoolType;
-  institution: string;
   rankPoints?: number;           // JC: 0–90
   gpa?: number;                  // Poly: 0.0–4.0
-  subjects: string[];
+  subjects: string[];            // strongest subjects, used for course-fit matching
 
   // Step 2 — Resume
   resumeText?: string;           // raw extracted text
@@ -54,6 +53,7 @@ export interface ProbabilityResult {
   label: string;
   breakdown: {
     baseProb: number;
+    subjectBoost: number;
     interestBoost: number;
     industryBoost: number;
     resumeBoost: number;

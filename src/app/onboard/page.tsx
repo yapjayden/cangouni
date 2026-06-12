@@ -10,8 +10,14 @@ import { Industries } from "@/components/onboard/steps/Industries";
 
 const STEPS = ["Academic", "Resume", "Interests", "Industries", "Lifestyle"];
 
+const SUBJECTS = [
+  "Mathematics", "Further Mathematics", "Physics", "Chemistry", "Biology",
+  "Economics", "Computing", "Literature", "History", "Geography",
+  "Art & Design", "Accounting",
+];
+
 const EMPTY: UserProfile = {
-  schoolType: "JC", institution: "", subjects: [],
+  schoolType: "JC", subjects: [],
   resumeText: "", resumeKeywords: [], achievements: "",
   interests: [], preferredIndustries: [], lifestylePrefs: [],
 };
@@ -91,9 +97,21 @@ export default function OnboardPage() {
               </div>
             )}
             <div>
-              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Institution</label>
-              <input value={profile.institution} onChange={e => update({ institution: e.target.value })} placeholder="e.g. Hwa Chong JC / Ngee Ann Poly"
-                style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+              <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Your strongest subjects</label>
+              <div style={{ fontFamily: "var(--font-ui)", fontSize: "11px", color: colors.faint, marginBottom: "10px" }}>Pick the ones closest to your studies — we use these to surface courses that fit your strengths.</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {SUBJECTS.map(subject => {
+                  const on = profile.subjects.includes(subject);
+                  return (
+                    <button key={subject} onClick={() => update({ subjects: on ? profile.subjects.filter(s => s !== subject) : [...profile.subjects, subject] })} style={{
+                      fontFamily: "var(--font-mono)", fontSize: "9px", padding: "6px 12px",
+                      border: `0.5px solid ${on ? colors.accent : "rgba(255,255,255,0.12)"}`,
+                      background: on ? "rgba(120,190,80,0.1)" : "transparent",
+                      color: on ? colors.text : colors.muted, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
+                    }}>{subject}</button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

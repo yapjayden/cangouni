@@ -65,6 +65,9 @@ export interface ProbabilityResult {
     subjects: number;
     industries: number;
     resumeHits: number;
+    matchedInterests: string[];  // the actual items that matched, for plain-language reasons
+    matchedSubjects: string[];
+    matchedIndustries: string[];
   };
 }
 

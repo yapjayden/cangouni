@@ -26,9 +26,37 @@ export default function OnboardPage() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState<UserProfile>(EMPTY);
   const [resumeData, setResumeData] = useState<ResumeParseResult | null>(null);
+  const [scoreError, setScoreError] = useState("");
   const router = useRouter();
 
   const update = (patch: Partial<UserProfile>) => setProfile(p => ({ ...p, ...patch }));
+
+  // The academic score is required before leaving step 0 — JC students must enter
+  // their rank points, poly students their GPA. Returns an error message if missing.
+  function validateScore(): string {
+    if (profile.schoolType === "JC") {
+      const max = (profile.rankSystem ?? "70") === "70" ? 70 : 90;
+      const rp = profile.rankPoints;
+      if (rp == null || Number.isNaN(rp) || rp <= 0) return "Please enter your rank points to continue.";
+      if (rp > max) return `Rank points can't exceed ${max} on this scale.`;
+    } else {
+      const gpa = profile.gpa;
+      if (gpa == null || Number.isNaN(gpa) || gpa <= 0) return "Please enter your GPA to continue.";
+      if (gpa > 4) return "GPA can't exceed 4.0.";
+    }
+    return "";
+  }
+
+  function next() {
+    if (step === 0) {
+      const err = validateScore();
+      if (err) {
+        setScoreError(err);
+        return;
+      }
+    }
+    setStep(s => s + 1);
+  }
 
   function handleResumeParsed(result: ResumeParseResult) {
     setResumeData(result);
@@ -73,7 +101,7 @@ export default function OnboardPage() {
               <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>School type</label>
               <div style={{ display: "flex", gap: "8px" }}>
                 {(["JC", "Poly"] as const).map(t => (
-                  <button key={t} onClick={() => update({ schoolType: t })} style={{
+                  <button key={t} onClick={() => { update({ schoolType: t }); setScoreError(""); }} style={{
                     flex: 1, padding: "10px",
                     border: `0.5px solid ${profile.schoolType === t ? colors.accent : "rgba(255,255,255,0.1)"}`,
                     background: profile.schoolType === t ? "rgba(120,190,80,0.1)" : "transparent",
@@ -91,7 +119,7 @@ export default function OnboardPage() {
                     {([["70", "70-point (2026 onwards)"], ["90", "90-point (before 2026)"]] as const).map(([sys, label]) => {
                       const on = (profile.rankSystem ?? "70") === sys;
                       return (
-                        <button key={sys} onClick={() => update({ rankSystem: sys, rankPoints: undefined })} style={{
+                        <button key={sys} onClick={() => { update({ rankSystem: sys, rankPoints: undefined }); setScoreError(""); }} style={{
                           flex: 1, padding: "10px 8px",
                           border: `0.5px solid ${on ? colors.accent : "rgba(255,255,255,0.1)"}`,
                           background: on ? "rgba(120,190,80,0.1)" : "transparent",
@@ -107,9 +135,9 @@ export default function OnboardPage() {
                     const max = (profile.rankSystem ?? "70") === "70" ? 70 : 90;
                     return (
                       <>
-                        <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–{max})</label>
-                        <input type="number" min={0} max={max} step={0.5} value={profile.rankPoints ?? ""} onChange={e => update({ rankPoints: parseFloat(e.target.value) })} placeholder={max === 70 ? "e.g. 68.75" : "e.g. 87.5"}
-                          style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+                        <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–{max}) <span style={{ color: colors.accent }}>*</span></label>
+                        <input type="number" min={0} max={max} step={0.5} value={profile.rankPoints ?? ""} onChange={e => { update({ rankPoints: parseFloat(e.target.value) }); setScoreError(""); }} placeholder={max === 70 ? "e.g. 68.75" : "e.g. 87.5"}
+                          style={{ width: "100%", background: colors.input, border: `0.5px solid ${scoreError ? "#E07070" : "rgba(255,255,255,0.1)"}`, padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
                       </>
                     );
                   })()}
@@ -117,9 +145,9 @@ export default function OnboardPage() {
               </>
             ) : (
               <div>
-                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>GPA (0.0–4.0)</label>
-                <input type="number" min={0} max={4} step={0.01} value={profile.gpa ?? ""} onChange={e => update({ gpa: parseFloat(e.target.value) })} placeholder="e.g. 3.85"
-                  style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>GPA (0.0–4.0) <span style={{ color: colors.accent }}>*</span></label>
+                <input type="number" min={0} max={4} step={0.01} value={profile.gpa ?? ""} onChange={e => { update({ gpa: parseFloat(e.target.value) }); setScoreError(""); }} placeholder="e.g. 3.85"
+                  style={{ width: "100%", background: colors.input, border: `0.5px solid ${scoreError ? "#E07070" : "rgba(255,255,255,0.1)"}`, padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
               </div>
             )}
             <div>
@@ -179,12 +207,23 @@ export default function OnboardPage() {
           </div>
         )}
 
+        {/* Required-score reminder */}
+        {step === 0 && scoreError && (
+          <div style={{
+            marginTop: "20px", padding: "12px 14px",
+            background: "rgba(224,112,112,0.08)", border: "0.5px solid rgba(224,112,112,0.4)",
+            fontFamily: "var(--font-ui)", fontSize: "12px", color: "#E07070", lineHeight: 1.5,
+          }}>
+            ⚠ {scoreError}
+          </div>
+        )}
+
         {/* Nav buttons */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "32px" }}>
           {step > 0 ? (
             <button onClick={() => setStep(s => s - 1)} style={{ background: "transparent", color: colors.muted, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 20px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>← Back</button>
           ) : <div />}
-          <button onClick={step < STEPS.length - 1 ? () => setStep(s => s + 1) : submit} style={{ background: colors.accent, color: colors.bg, border: "none", padding: "10px 24px", fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+          <button onClick={step < STEPS.length - 1 ? next : submit} style={{ background: colors.accent, color: colors.bg, border: "none", padding: "10px 24px", fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
             {step === STEPS.length - 1 ? "See My Results →" : "Continue →"}
           </button>
         </div>

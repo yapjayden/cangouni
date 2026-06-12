@@ -1,5 +1,5 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { generateContentResilient } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
@@ -37,10 +37,7 @@ async function extractPdfWithGemini(buffer: Buffer): Promise<string> {
     );
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-  const result = await model.generateContent([
+  return generateContentResilient(apiKey, [
     { inlineData: { mimeType: "application/pdf", data: buffer.toString("base64") } },
     {
       text:
@@ -48,8 +45,6 @@ async function extractPdfWithGemini(buffer: Buffer): Promise<string> {
         "Return only the plain text content — no commentary, no markdown.",
     },
   ]);
-
-  return result.response.text() ?? "";
 }
 
 export async function POST(req: NextRequest) {

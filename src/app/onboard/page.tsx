@@ -17,7 +17,7 @@ const SUBJECTS = [
 ];
 
 const EMPTY: UserProfile = {
-  schoolType: "JC", subjects: [],
+  schoolType: "JC", rankSystem: "70", subjects: [],
   resumeText: "", resumeKeywords: [], achievements: "",
   interests: [], preferredIndustries: [], lifestylePrefs: [],
 };
@@ -84,11 +84,37 @@ export default function OnboardPage() {
               </div>
             </div>
             {profile.schoolType === "JC" ? (
-              <div>
-                <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–90)</label>
-                <input type="number" min={0} max={90} step={0.5} value={profile.rankPoints ?? ""} onChange={e => update({ rankPoints: parseFloat(e.target.value) })} placeholder="e.g. 87.5"
-                  style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
-              </div>
+              <>
+                <div>
+                  <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank-point system</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    {([["70", "70-point (2026 onwards)"], ["90", "90-point (before 2026)"]] as const).map(([sys, label]) => {
+                      const on = (profile.rankSystem ?? "70") === sys;
+                      return (
+                        <button key={sys} onClick={() => update({ rankSystem: sys, rankPoints: undefined })} style={{
+                          flex: 1, padding: "10px 8px",
+                          border: `0.5px solid ${on ? colors.accent : "rgba(255,255,255,0.1)"}`,
+                          background: on ? "rgba(120,190,80,0.1)" : "transparent",
+                          color: on ? colors.accent : colors.muted,
+                          fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", lineHeight: 1.4,
+                        }}>{label}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  {(() => {
+                    const max = (profile.rankSystem ?? "70") === "70" ? 70 : 90;
+                    return (
+                      <>
+                        <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>Rank Points (0–{max})</label>
+                        <input type="number" min={0} max={max} step={0.5} value={profile.rankPoints ?? ""} onChange={e => update({ rankPoints: parseFloat(e.target.value) })} placeholder={max === 70 ? "e.g. 68.75" : "e.g. 87.5"}
+                          style={{ width: "100%", background: colors.input, border: "0.5px solid rgba(255,255,255,0.1)", padding: "10px 13px", color: colors.text, fontFamily: "var(--font-ui)", fontSize: "13px", outline: "none" }} />
+                      </>
+                    );
+                  })()}
+                </div>
+              </>
             ) : (
               <div>
                 <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>GPA (0.0–4.0)</label>

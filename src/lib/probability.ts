@@ -1,114 +1,124 @@
 import { igpData } from "@/lib/courses";
 import { UserProfile, ProbabilityResult, CourseEntry } from "@/types";
 
-function studentScore(profile: UserProfile): number {
-  if (profile.schoolType === "JC") return profile.rankPoints ?? 70;
-  return (profile.gpa ?? 3.0) * 22.5;
+const MAX = { rp90: 90, rp70: 70, gpa: 4 };
+
+/**
+ * Resolve the student's score, the course's cut-off, and the max for the
+ * student's track — JC uses the 70-pt (2026+) or 90-pt rank-point scale,
+ * poly uses GPA. Everything downstream works off these three numbers.
+ */
+function track(course: CourseEntry, profile: UserProfile) {
+  if (profile.schoolType === "Poly") {
+    return { cutoff: course.polyGpa10 ?? MAX.gpa, max: MAX.gpa, score: profile.gpa ?? 0, scaleLabel: "GPA" };
+  }
+  const use70 = (profile.rankSystem ?? "70") === "70";
+  return {
+    cutoff: use70 ? course.rankPoints70 : course.rankPoints90,
+    max: use70 ? MAX.rp70 : MAX.rp90,
+    score: profile.rankPoints ?? 0,
+    scaleLabel: use70 ? "RP (70-pt)" : "RP (90-pt)",
+  };
 }
 
-function igpThreshold(course: CourseEntry, profile: UserProfile): number {
-  if (profile.schoolType === "Poly") return (course.polyGpa10 ?? 3) * 22.5;
-  return parseFloat(course.alGrade10 ?? "65") || 65;
+/**
+ * Estimated admission chance from the gap to the published IGP cut-off.
+ *
+ * The cut-off is the 10th percentile of ADMITTED students (≈90% of those
+ * admitted scored at or above it), so a student exactly at the cut-off is
+ * borderline. We pass the gap (in % of the scale's max, so one curve fits all
+ * tracks) through a logistic anchored at:
+ *   gap  0%  → ~55%   right at the cut-off — competitive but not safe
+ *   gap +8%  → ~85%   clearly above — safe
+ *   gap −8%  → ~25%   clearly below — unlikely but not impossible
+ * Interview/portfolio courses carry uncertainty grades can't cover, so their
+ * chance is scaled down. This is an estimate for comparing courses, not a
+ * guaranteed probability.
+ */
+function admissionChance(cutoff: number, max: number, score: number, interview: boolean): number {
+  const gap = ((score - cutoff) / max) * 100;
+  let p = 1 / (1 + Math.exp(-(0.19 * gap + 0.2)));
+  if (interview) p *= 0.9;
+  return Math.round(Math.max(3, Math.min(97, p * 100)));
 }
 
-function calcBaseProbability(score: number, threshold: number): number {
-  const gap = score - threshold;
-  const prob = 50 + gap * 5 - gap * gap * 0.15;
-  return Math.max(5, Math.min(95, prob));
+/** Lifestyle prefs the university satisfies — feeds Match only, never chance. */
+function matchedLifestyleTags(course: CourseEntry, profile: UserProfile): string[] {
+  if (!profile.lifestylePrefs?.length || !course.lifestyleTags?.length) return [];
+  return course.lifestyleTags.filter(tag => profile.lifestylePrefs.includes(tag));
 }
 
-function calcInterestBoost(course: CourseEntry, profile: UserProfile): number {
-  const matches = course.categories.filter(cat =>
+/**
+ * Suitability as an interpretable weighted percentage rather than arbitrary
+ * point additions. Each dimension contributes a 0–1 ratio (saturating, so a
+ * couple of strong matches = full marks), and only dimensions the student
+ * actually filled in are counted — blank fields don't drag the score down.
+ */
+function suitability(course: CourseEntry, profile: UserProfile) {
+  const interests = course.categories.filter(cat =>
     profile.interests.some(i => i.toLowerCase() === cat.toLowerCase())
   ).length;
-  return Math.min(matches * 3, 12);
-}
 
-function calcIndustryBoost(course: CourseEntry, profile: UserProfile): number {
-  const matches = course.industries.filter(ind =>
-    profile.preferredIndustries.some(pi =>
-      pi.toLowerCase().includes(ind.toLowerCase()) ||
-      ind.toLowerCase().includes(pi.toLowerCase())
-    )
-  ).length;
-  return Math.min(matches * 2, 8);
-}
-
-function calcSubjectBoost(course: CourseEntry, profile: UserProfile): number {
-  if (!profile.subjects?.length || !course.subjectReqs?.length) return 0;
-  const matches = course.subjectReqs.filter(req =>
+  const subjects = course.subjectReqs.filter(req =>
     profile.subjects.some(s => s.toLowerCase() === req.toLowerCase())
   ).length;
-  return Math.min(matches * 4, 12);
-}
 
-function calcResumeBoost(course: CourseEntry, profile: UserProfile): number {
-  if (!profile.resumeKeywords?.length) return 0;
+  const industries = course.industries.filter(ind =>
+    profile.preferredIndustries.some(pi => {
+      const a = pi.toLowerCase();
+      const b = ind.toLowerCase();
+      return a.includes(b) || b.includes(a);
+    })
+  ).length;
+
+  const lifestyle = matchedLifestyleTags(course, profile).length;
+
   const text = `${course.course} ${course.categories.join(" ")} ${course.industries.join(" ")}`.toLowerCase();
-  const matches = profile.resumeKeywords.filter(k => k.length > 3 && text.includes(k.toLowerCase())).length;
-  return Math.min(matches, 6);
-}
+  const resumeHits = (profile.resumeKeywords ?? []).filter(k => k.length > 3 && text.includes(k.toLowerCase())).length;
 
-function calcFitScore(course: CourseEntry, profile: UserProfile): number {
-  const totalCats = Math.max(course.categories.length, 1);
-  const matchedInterests = course.categories.filter(cat =>
-    profile.interests.some(i => i.toLowerCase() === cat.toLowerCase())
-  ).length;
-  const interestScore = (matchedInterests / totalCats) * 35;
+  const dims = [
+    { weight: 0.30, provided: profile.interests.length > 0, ratio: Math.min(interests / 3, 1) },
+    { weight: 0.25, provided: profile.subjects.length > 0, ratio: Math.min(subjects / 2, 1) },
+    { weight: 0.20, provided: profile.preferredIndustries.length > 0, ratio: Math.min(industries / 2, 1) },
+    { weight: 0.15, provided: profile.lifestylePrefs.length > 0, ratio: profile.lifestylePrefs.length ? lifestyle / profile.lifestylePrefs.length : 0 },
+    { weight: 0.10, provided: (profile.resumeKeywords ?? []).length > 0, ratio: Math.min(resumeHits / 4, 1) },
+  ];
+  const active = dims.filter(d => d.provided);
+  const totalWeight = active.reduce((sum, d) => sum + d.weight, 0) || 1;
+  const matchScore = Math.round((active.reduce((sum, d) => sum + d.ratio * d.weight, 0) / totalWeight) * 100);
 
-  const totalInds = Math.max(course.industries.length, 1);
-  const matchedInds = course.industries.filter(ind =>
-    profile.preferredIndustries.some(pi => pi.toLowerCase().includes(ind.toLowerCase()))
-  ).length;
-  const industryScore = (matchedInds / totalInds) * 25;
-
-  const totalReqs = Math.max(course.subjectReqs.length, 1);
-  const matchedReqs = course.subjectReqs.filter(req =>
-    profile.subjects.some(s => s.toLowerCase() === req.toLowerCase())
-  ).length;
-  const subjectScore = (matchedReqs / totalReqs) * 20;
-
-  const text = `${course.course} ${course.categories.join(" ")}`.toLowerCase();
-  const matchedKws = (profile.resumeKeywords ?? []).filter(k => k.length > 3 && text.includes(k.toLowerCase())).length;
-  const resumeScore = Math.min(matchedKws / 5, 1) * 20;
-
-  return Math.round(interestScore + industryScore + subjectScore + resumeScore);
+  return { matchScore, interests, subjects, industries, resumeHits };
 }
 
 export function calculateProbabilities(profile: UserProfile): ProbabilityResult[] {
-  const score = studentScore(profile);
-
   return igpData
-    .filter(course => profile.schoolType === "Poly" ? course.polyGpa10 != null : true)
+    .filter(course => (profile.schoolType === "Poly" ? course.polyGpa10 != null : true))
     .map(course => {
-      const threshold = igpThreshold(course, profile);
-      const baseProb = calcBaseProbability(score, threshold);
-      const subjectBoost = calcSubjectBoost(course, profile);
-      const interestBoost = calcInterestBoost(course, profile);
-      const industryBoost = calcIndustryBoost(course, profile);
-      const resumeBoost = calcResumeBoost(course, profile);
-      const penalty = course.requiresAssessment ? 5 : 0;
+      const t = track(course, profile);
+      const chance = admissionChance(t.cutoff, t.max, t.score, course.requiresAssessment);
+      const s = suitability(course, profile);
+      const matchedLifestyle = matchedLifestyleTags(course, profile);
 
-      const probability = Math.round(
-        Math.max(5, Math.min(95, baseProb + subjectBoost + interestBoost + industryBoost + resumeBoost - penalty))
-      );
-      const fitScore = calcFitScore(course, profile);
-      const combinedScore = probability * 0.6 + fitScore * 0.4;
+      // Rank by a blend that slightly favours courses you can actually get into.
+      const combinedScore = chance * 0.55 + s.matchScore * 0.45;
 
       return {
         course,
-        probability,
-        fitScore,
+        admissionChance: chance,
+        matchScore: s.matchScore,
         combinedScore,
-        label: `${probability}%${course.requiresAssessment ? "*" : ""}`,
-        breakdown: {
-          baseProb: Math.round(baseProb),
-          subjectBoost,
-          interestBoost,
-          industryBoost,
-          resumeBoost,
-          assessmentPenalty: penalty,
+        matchedLifestyle,
+        reasons: {
+          cutoff: Math.round(t.cutoff * 10) / 10,
+          studentScore: Math.round(t.score * 10) / 10,
+          scaleLabel: t.scaleLabel,
+          interview: course.requiresAssessment,
+          interests: s.interests,
+          subjects: s.subjects,
+          industries: s.industries,
+          resumeHits: s.resumeHits,
         },
+        label: `${chance}%${course.requiresAssessment ? "*" : ""}`,
       };
     })
     .sort((a, b) => b.combinedScore - a.combinedScore);

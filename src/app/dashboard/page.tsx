@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FilterSidebar, type SortKey } from "@/components/dashboard/FilterSidebar";
 import { ResultsGrid } from "@/components/dashboard/ResultsGrid";
+import { CompareTray } from "@/components/dashboard/CompareTray";
 import { calculateProbabilities } from "@/lib/probability";
 import { colors } from "@/theme";
 import type { ProbabilityResult, University, UserProfile } from "@/types";
@@ -18,6 +19,14 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("recommended");
   const [labels, setLabels] = useState<string[]>([]);
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const COMPARE_MAX = 4;
+  const toggleCompare = (id: string) =>
+    setCompareIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < COMPARE_MAX ? [...prev, id] : prev
+    );
 
   useEffect(() => {
     const raw = sessionStorage.getItem("cgu_profile");
@@ -34,10 +43,16 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  // Every label (course category) present in the results, for the manual filter.
+  // Every label (course category) and industry present in the results, for the manual filters.
   const allLabels = useMemo(() => {
     const set = new Set<string>();
     results.forEach(r => r.course.categories.forEach(c => set.add(c)));
+    return [...set].sort();
+  }, [results]);
+
+  const allIndustries = useMemo(() => {
+    const set = new Set<string>();
+    results.forEach(r => r.course.industries.forEach(c => set.add(c)));
     return [...set].sort();
   }, [results]);
 
@@ -46,6 +61,7 @@ export default function DashboardPage() {
       if (r.admissionChance < minProb) return false;
       if (universities.length > 0 && !universities.includes(r.course.university)) return false;
       if (labels.length > 0 && !labels.some(l => r.course.categories.includes(l))) return false;
+      if (industries.length > 0 && !industries.some(ind => r.course.industries.includes(ind))) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const hay = `${r.course.course} ${r.course.faculty} ${r.course.university}`.toLowerCase();
@@ -59,7 +75,13 @@ export default function DashboardPage() {
     else if (sort === "match") sorted.sort((a, b) => b.matchScore - a.matchScore);
     else sorted.sort((a, b) => b.combinedScore - a.combinedScore);
     return sorted;
-  }, [results, minProb, universities, labels, search, sort]);
+  }, [results, minProb, universities, labels, industries, search, sort]);
+
+  // The selected courses, in the order the user picked them, for the compare tray.
+  const compareSelected = useMemo(
+    () => compareIds.map(id => results.find(r => r.course.id === id)).filter(Boolean) as ProbabilityResult[],
+    [compareIds, results]
+  );
 
   if (!profile) {
     return (
@@ -89,7 +111,7 @@ export default function DashboardPage() {
         </nav>
       </header>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px 64px" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: compareSelected.length > 0 ? "32px 24px 120px" : "32px 24px 64px" }}>
         <div style={{ marginBottom: "32px" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.faint, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>
             Your admission outlook
@@ -119,12 +141,26 @@ export default function DashboardPage() {
             allLabels={allLabels}
             labels={labels}
             onLabelsChange={setLabels}
+            allIndustries={allIndustries}
+            industries={industries}
+            onIndustriesChange={setIndustries}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <ResultsGrid results={filtered} />
+            <ResultsGrid
+              results={filtered}
+              compareIds={compareIds}
+              onToggleCompare={toggleCompare}
+              compareLimitReached={compareIds.length >= COMPARE_MAX}
+            />
           </div>
         </div>
       </div>
+
+      <CompareTray
+        selected={compareSelected}
+        onRemove={toggleCompare}
+        onClear={() => setCompareIds([])}
+      />
     </main>
   );
 }

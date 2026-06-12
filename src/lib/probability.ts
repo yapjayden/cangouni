@@ -55,22 +55,25 @@ function matchedLifestyleTags(course: CourseEntry, profile: UserProfile): string
  * actually filled in are counted — blank fields don't drag the score down.
  */
 function suitability(course: CourseEntry, profile: UserProfile) {
-  const interests = course.categories.filter(cat =>
+  const matchedInterests = course.categories.filter(cat =>
     profile.interests.some(i => i.toLowerCase() === cat.toLowerCase())
-  ).length;
+  );
 
-  const subjects = course.subjectReqs.filter(req =>
+  const matchedSubjects = course.subjectReqs.filter(req =>
     profile.subjects.some(s => s.toLowerCase() === req.toLowerCase())
-  ).length;
+  );
 
-  const industries = course.industries.filter(ind =>
+  const matchedIndustries = course.industries.filter(ind =>
     profile.preferredIndustries.some(pi => {
       const a = pi.toLowerCase();
       const b = ind.toLowerCase();
       return a.includes(b) || b.includes(a);
     })
-  ).length;
+  );
 
+  const interests = matchedInterests.length;
+  const subjects = matchedSubjects.length;
+  const industries = matchedIndustries.length;
   const lifestyle = matchedLifestyleTags(course, profile).length;
 
   const text = `${course.course} ${course.categories.join(" ")} ${course.industries.join(" ")}`.toLowerCase();
@@ -87,7 +90,7 @@ function suitability(course: CourseEntry, profile: UserProfile) {
   const totalWeight = active.reduce((sum, d) => sum + d.weight, 0) || 1;
   const matchScore = Math.round((active.reduce((sum, d) => sum + d.ratio * d.weight, 0) / totalWeight) * 100);
 
-  return { matchScore, interests, subjects, industries, resumeHits };
+  return { matchScore, interests, subjects, industries, resumeHits, matchedInterests, matchedSubjects, matchedIndustries };
 }
 
 export function calculateProbabilities(profile: UserProfile): ProbabilityResult[] {
@@ -117,6 +120,9 @@ export function calculateProbabilities(profile: UserProfile): ProbabilityResult[
           subjects: s.subjects,
           industries: s.industries,
           resumeHits: s.resumeHits,
+          matchedInterests: s.matchedInterests,
+          matchedSubjects: s.matchedSubjects,
+          matchedIndustries: s.matchedIndustries,
         },
         label: `${chance}%${course.requiresAssessment ? "*" : ""}`,
       };

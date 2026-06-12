@@ -6,6 +6,9 @@ import { colors } from "@/theme";
 interface Props {
   result: ProbabilityResult;
   rank: number;
+  compareSelected?: boolean;
+  onToggleCompare?: (id: string) => void;
+  compareDisabled?: boolean;
 }
 
 function chanceColor(p: number) {
@@ -55,15 +58,15 @@ function RingStat({ value, label, color, numberColor }: { value: number; label: 
   );
 }
 
-export function ProbabilityCard({ result, rank }: Props) {
+export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare, compareDisabled }: Props) {
   const { course, admissionChance, matchScore, matchedLifestyle, reasons } = result;
 
-  // Plain-language match summary, built only from things that actually matched.
+  // Plain-language "why this fits", naming the actual things that matched.
   const matchBits: string[] = [];
-  if (reasons.interests > 0) matchBits.push(`${reasons.interests} interest${reasons.interests > 1 ? "s" : ""}`);
-  if (reasons.subjects > 0) matchBits.push(`${reasons.subjects} subject${reasons.subjects > 1 ? "s" : ""}`);
-  if (reasons.industries > 0) matchBits.push(`${reasons.industries} industry`);
-  if (reasons.resumeHits > 0) matchBits.push(`${reasons.resumeHits} from your resume`);
+  if (reasons.matchedInterests.length > 0) matchBits.push(`your interest in ${reasons.matchedInterests.join(", ")}`);
+  if (reasons.matchedSubjects.length > 0) matchBits.push(`your strength in ${reasons.matchedSubjects.join(", ")}`);
+  if (reasons.matchedIndustries.length > 0) matchBits.push(`the ${reasons.matchedIndustries.join(", ")} pathway`);
+  if (reasons.resumeHits > 0) matchBits.push(`${reasons.resumeHits} skill${reasons.resumeHits > 1 ? "s" : ""} from your resume`);
 
   return (
     <article style={{
@@ -105,7 +108,8 @@ export function ProbabilityCard({ result, rank }: Props) {
 
       {matchBits.length > 0 && (
         <div style={{ fontFamily: "var(--font-ui)", fontSize: "12px", color: "#9AA392", lineHeight: 1.5 }}>
-          Matches {matchBits.join(" · ")}
+          <span style={{ color: "#78BE50" }}>Why this fits: </span>
+          matches {matchBits.join(" · ")}
         </div>
       )}
 
@@ -115,9 +119,29 @@ export function ProbabilityCard({ result, rank }: Props) {
         </div>
       )}
 
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#C8CEC0", letterSpacing: "0.06em" }}>
-        Your {reasons.scaleLabel} {reasons.studentScore} vs cut-off {reasons.cutoff}
-        {reasons.interview && " · interview required"}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "#C8CEC0", letterSpacing: "0.06em" }}>
+          Your {reasons.scaleLabel} {reasons.studentScore} vs cut-off {reasons.cutoff}
+          {reasons.interview && " · interview required"}
+        </div>
+        {onToggleCompare && (
+          <button
+            type="button"
+            onClick={() => onToggleCompare(course.id)}
+            disabled={!compareSelected && compareDisabled}
+            style={{
+              flexShrink: 0,
+              fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.08em", textTransform: "uppercase",
+              padding: "5px 10px",
+              cursor: !compareSelected && compareDisabled ? "not-allowed" : "pointer",
+              border: `0.5px solid ${compareSelected ? "#78BE50" : "rgba(255,255,255,0.14)"}`,
+              background: compareSelected ? "rgba(120,190,80,0.12)" : "transparent",
+              color: compareSelected ? "#78BE50" : (compareDisabled ? "#383E33" : "#9AA392"),
+            }}
+          >
+            {compareSelected ? "✓ Comparing" : "+ Compare"}
+          </button>
+        )}
       </div>
     </article>
   );

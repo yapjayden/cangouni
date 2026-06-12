@@ -24,6 +24,9 @@ interface Props {
   allLabels: string[];
   labels: string[];
   onLabelsChange: (v: string[]) => void;
+  allIndustries: string[];
+  industries: string[];
+  onIndustriesChange: (v: string[]) => void;
 }
 
 export function FilterSidebar({
@@ -38,6 +41,9 @@ export function FilterSidebar({
   allLabels,
   labels,
   onLabelsChange,
+  allIndustries,
+  industries,
+  onIndustriesChange,
 }: Props) {
   const toggleUni = (u: University) => {
     onUniversitiesChange(
@@ -47,6 +53,10 @@ export function FilterSidebar({
 
   const toggleLabel = (l: string) => {
     onLabelsChange(labels.includes(l) ? labels.filter(x => x !== l) : [...labels, l]);
+  };
+
+  const toggleIndustry = (ind: string) => {
+    onIndustriesChange(industries.includes(ind) ? industries.filter(x => x !== ind) : [...industries, ind]);
   };
 
   return (
@@ -188,6 +198,46 @@ export function FilterSidebar({
               style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", background: "none", border: "none", cursor: "pointer" }}
             >
               Clear labels
+            </button>
+          )}
+        </div>
+      )}
+
+      {allIndustries.length > 0 && (
+        <div>
+          <label style={labelStyle}>Industries</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {allIndustries.map(ind => {
+              const on = industries.includes(ind);
+              return (
+                <button
+                  key={ind}
+                  type="button"
+                  onClick={() => toggleIndustry(ind)}
+                  style={{
+                    padding: "5px 9px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "8px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    border: `0.5px solid ${on ? "#78BE50" : "rgba(255,255,255,0.1)"}`,
+                    background: on ? "rgba(120,190,80,0.1)" : "transparent",
+                    color: on ? "#78BE50" : "#9AA392",
+                  }}
+                >
+                  {ind}
+                </button>
+              );
+            })}
+          </div>
+          {industries.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onIndustriesChange([])}
+              style={{ marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "8px", color: "#383E33", background: "none", border: "none", cursor: "pointer" }}
+            >
+              Clear industries
             </button>
           )}
         </div>

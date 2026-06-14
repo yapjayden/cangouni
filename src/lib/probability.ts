@@ -79,16 +79,26 @@ function suitability(course: CourseEntry, profile: UserProfile) {
   const text = `${course.course} ${course.categories.join(" ")} ${course.industries.join(" ")}`.toLowerCase();
   const resumeHits = (profile.resumeKeywords ?? []).filter(k => k.length > 3 && text.includes(k.toLowerCase())).length;
 
+  // Penalty if student has strong resume keywords but none match this course.
+  // Prevents generic courses (e.g. "Sport Science") from ranking high when
+  // the profile is clearly specialized (e.g. all tech keywords).
+  const hasStrongResume = (profile.resumeKeywords ?? []).length >= 5;
+  const resumePenalty = hasStrongResume && resumeHits === 0 ? 0.75 : 1.0;
+
   const dims = [
-    { weight: 0.30, provided: profile.interests.length > 0, ratio: Math.min(interests / 3, 1) },
-    { weight: 0.25, provided: profile.subjects.length > 0, ratio: Math.min(subjects / 2, 1) },
-    { weight: 0.20, provided: profile.preferredIndustries.length > 0, ratio: Math.min(industries / 2, 1) },
-    { weight: 0.15, provided: profile.lifestylePrefs.length > 0, ratio: profile.lifestylePrefs.length ? lifestyle / profile.lifestylePrefs.length : 0 },
-    { weight: 0.10, provided: (profile.resumeKeywords ?? []).length > 0, ratio: Math.min(resumeHits / 4, 1) },
+    { weight: 0.28, provided: profile.interests.length > 0, ratio: Math.min(interests / 4, 1) }, // Stricter: 4 matches → full
+    { weight: 0.24, provided: profile.subjects.length > 0, ratio: Math.min(subjects / 2, 1) },
+    { weight: 0.19, provided: profile.preferredIndustries.length > 0, ratio: Math.min(industries / 2, 1) },
+    { weight: 0.14, provided: profile.lifestylePrefs.length > 0, ratio: profile.lifestylePrefs.length ? lifestyle / profile.lifestylePrefs.length : 0 },
+    { weight: 0.15, provided: (profile.resumeKeywords ?? []).length > 0, ratio: Math.min(resumeHits / 4, 1) }, // Boosted: 10% → 15%
   ];
   const active = dims.filter(d => d.provided);
   const totalWeight = active.reduce((sum, d) => sum + d.weight, 0) || 1;
-  const matchScore = Math.round((active.reduce((sum, d) => sum + d.ratio * d.weight, 0) / totalWeight) * 100);
+  let matchScore = Math.round((active.reduce((sum, d) => sum + d.ratio * d.weight, 0) / totalWeight) * 100);
+
+  // Apply resume keyword penalty: if a strong-resume profile has zero keyword hits,
+  // reduce the score by up to 25% to deprioritize off-target courses.
+  matchScore = Math.round(matchScore * resumePenalty);
 
   return { matchScore, interests, subjects, industries, resumeHits, matchedInterests, matchedSubjects, matchedIndustries };
 }

@@ -24,11 +24,36 @@ export async function POST(req: NextRequest) {
           .join("\n")
       : "not yet calculated";
 
+    // Describe the academic score WITH its scale so the AI doesn't misread it.
+    // JC rank points: higher is better, max is 70 (2026+ scale) or 90 (older).
+    // Poly: GPA out of 4.0. A score AT the max is the strongest possible.
+    let academicLine: string;
+    if (userProfile?.schoolType === "JC") {
+      const max = (userProfile?.rankSystem ?? "70") === "70" ? 70 : 90;
+      const rp = userProfile?.rankPoints;
+      const note =
+        typeof rp === "number"
+          ? rp >= max
+            ? ` — this is the MAXIMUM possible (a perfect score); higher RP is better`
+            : ` out of a max of ${max} (higher RP is better)`
+          : "";
+      academicLine = `${rp ?? "not provided"} rank points on the ${max}-point scale${note}`;
+    } else if (userProfile?.schoolType === "Poly") {
+      academicLine = `GPA ${userProfile?.gpa ?? "not provided"} out of 4.0 (higher is better)`;
+    } else {
+      academicLine = "not provided";
+    }
+
     const system = `You are the CanGoUni AI advisor for Singapore students.
+
+Singapore JC rank points: a HIGHER number is BETTER. The 2026+ scale maxes at 70,
+the older scale maxes at 90. So 70 on the 70-point scale is a PERFECT score, and
+90 on the 90-point scale is perfect. Never treat a near-max rank point as weak.
+Poly GPA is out of 4.0, where higher is better.
 
 Student Profile:
 - School Type: ${userProfile?.schoolType ?? "unknown"}
-- Academic Score: ${userProfile?.rankPoints ?? "not provided"}${userProfile?.rankSystem ? ` RP (${userProfile.rankSystem}-pt scale)` : ""}
+- Academic Score: ${academicLine}
 - Subjects: ${userProfile?.subjects?.join(", ") ?? "not specified"}
 - Skills/Experience: ${userProfile?.resumeKeywords?.slice(0, 8).join(", ") ?? "none"}
 - Interests: ${userProfile?.interests?.slice(0, 8).join(", ") ?? "not specified"}

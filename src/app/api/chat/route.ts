@@ -66,7 +66,7 @@ ${courseLines}
 When recommending, reference specific courses by number and respect SHORTLISTED courses.
 Admission chance is estimated vs past cut-offs, not guaranteed.
 Match reflects fit to their interests, subjects, and priorities.
-Be direct, specific, occasionally Singlish. Max 4 sentences unless asked for more.`;
+Be direct, specific, and professional. Max 4 sentences unless asked for more.`;
 
     const priorHistory = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
       role: m.role === "user" ? "user" : "model",

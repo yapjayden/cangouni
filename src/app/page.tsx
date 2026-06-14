@@ -69,7 +69,7 @@ export default function LandingPage() {
           <button type="button" onClick={() => scrollTo("how-it-works")} style={{ background: "transparent", color: colors.muted, border: "1px solid rgba(255,255,255,0.12)", padding: "14px 24px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}>How it works</button>
         </div>
         <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "40px" }}>
-          {[{ n: "6", l: "Universities" }, { n: "500+", l: "Courses" }, { n: "IGP '24", l: "Live data" }].map((s, i) => (
+          {[{ n: "6", l: "Universities" }, { n: "500+", l: "Courses" }, { n: "IGP '26", l: "Live data" }].map((s, i) => (
             <div key={s.l} style={{ textAlign: "center", padding: "0 48px", borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: "36px", color: colors.accent }}>{s.n}</div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.faint, letterSpacing: "0.12em", textTransform: "uppercase" }}>{s.l}</div>

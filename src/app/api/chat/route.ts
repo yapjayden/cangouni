@@ -43,12 +43,21 @@ Admission chance is estimated vs past cut-offs, not guaranteed.
 Match reflects fit to their interests, subjects, and priorities.
 Be direct, specific, occasionally Singlish. Max 4 sentences unless asked for more.`;
 
-    const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
+    const priorHistory = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
       role: m.role === "user" ? "user" : "model",
       parts: [{ text: m.content }],
     }));
 
-    const chat = model.startChat({ history, systemInstruction: system });
+    // Seed the system prompt as the opening turn instead of using
+    // `systemInstruction`, which this API version rejects (it forces an
+    // unsupported role: "system" on the Content).
+    const history = [
+      { role: "user", parts: [{ text: system }] },
+      { role: "model", parts: [{ text: "Understood — I'll advise based on this profile and these ranked courses." }] },
+      ...priorHistory,
+    ];
+
+    const chat = model.startChat({ history });
     const result = await chat.sendMessageStream(messages.at(-1).content);
 
     const stream = new ReadableStream({

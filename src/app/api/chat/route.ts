@@ -24,8 +24,11 @@ export async function POST(req: NextRequest) {
           .join("\n")
       : "not yet calculated";
 
+    // Strip resumeText to avoid JSON encoding issues with newlines/special chars
+    const profileForSystem = userProfile ? { ...userProfile, resumeText: undefined } : {};
+
     const system = `You are the CanGoUni AI advisor for Singapore students.
-Profile: ${JSON.stringify(userProfile ?? {})}
+Profile: ${JSON.stringify(profileForSystem)}
 Interests: ${userProfile?.interests?.join(", ") ?? "not specified"}
 Preferred industries: ${userProfile?.preferredIndustries?.join(", ") ?? "not specified"}
 Resume keywords: ${userProfile?.resumeKeywords?.slice(0, 10).join(", ") ?? "none"}

@@ -24,21 +24,23 @@ export async function POST(req: NextRequest) {
           .join("\n")
       : "not yet calculated";
 
-    // Strip resumeText to avoid JSON encoding issues with newlines/special chars
-    const profileForSystem = userProfile ? { ...userProfile, resumeText: undefined } : {};
-
     const system = `You are the CanGoUni AI advisor for Singapore students.
-Profile: ${JSON.stringify(profileForSystem)}
-Interests: ${userProfile?.interests?.join(", ") ?? "not specified"}
-Preferred industries: ${userProfile?.preferredIndustries?.join(", ") ?? "not specified"}
-Resume keywords: ${userProfile?.resumeKeywords?.slice(0, 10).join(", ") ?? "none"}
+
+Student Profile:
+- School Type: ${userProfile?.schoolType ?? "unknown"}
+- Academic Score: ${userProfile?.rankPoints ?? "not provided"}${userProfile?.rankSystem ? ` RP (${userProfile.rankSystem}-pt scale)` : ""}
+- Subjects: ${userProfile?.subjects?.join(", ") ?? "not specified"}
+- Skills/Experience: ${userProfile?.resumeKeywords?.slice(0, 8).join(", ") ?? "none"}
+- Interests: ${userProfile?.interests?.slice(0, 8).join(", ") ?? "not specified"}
+- Preferred Industries: ${userProfile?.preferredIndustries?.join(", ") ?? "not specified"}
+- Lifestyle Preferences: ${userProfile?.lifestylePrefs?.join(", ") ?? "not specified"}
 
 The student's top ranked courses (from our estimator, based on past IGP cut-offs):
 ${courseLines}
 
-Admission chance is an estimate vs past cut-offs, not a guarantee. Match is fit to
-their interests/subjects/priorities. When recommending, reference these specific
-courses and their numbers, and respect any SHORTLISTED ones.
+When recommending, reference specific courses by number and respect SHORTLISTED courses.
+Admission chance is estimated vs past cut-offs, not guaranteed.
+Match reflects fit to their interests, subjects, and priorities.
 Be direct, specific, occasionally Singlish. Max 4 sentences unless asked for more.`;
 
     const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({

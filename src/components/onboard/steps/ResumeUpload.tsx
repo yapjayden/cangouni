@@ -175,6 +175,13 @@ export function ResumeUpload({ onParsed }: { onParsed: (r: ResumeParseResult) =>
             >
               + Add
             </button>
+            <button
+              type="button"
+              onClick={() => setKeywords([])}
+              style={{ background: "transparent", color: "#9AA392", border: "0.5px solid rgba(255,255,255,0.2)", padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}
+            >
+              Clear All
+            </button>
           </div>
         </div>
       )}

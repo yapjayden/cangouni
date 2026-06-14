@@ -89,7 +89,6 @@ Return ONLY valid JSON — no markdown, no extra text:
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
-    // Aggressive post-processing to remove false positives
     const commonFalsePositives = new Set([
       "resume", "profile", "experience", "education", "skills", "summary", "objective",
       "contact", "information", "phone", "email", "address", "linkedin", "github",
@@ -102,10 +101,12 @@ Return ONLY valid JSON — no markdown, no extra text:
       "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026",
       // Common names / company names
       "john", "jane", "smith", "johnson", "williams", "corporation", "inc", "ltd",
-      // Generic words
+      // Generic action/descriptor words (not skills)
       "i", "a", "the", "and", "or", "in", "at", "to", "for", "by", "with", "is",
       "are", "was", "were", "be", "been", "being", "have", "has", "do", "does",
       "me", "my", "we", "our", "they", "he", "she", "it", "us",
+      "team", "member", "part", "role", "worked", "participated", "involved",
+      "project", "course", "subject", "level", "award", "scholarship",
     ]);
 
     const filtered = (parsed.keywords ?? [])
@@ -131,6 +132,11 @@ Return ONLY valid JSON — no markdown, no extra text:
         if (/^\d/.test(lower)) return false;
 
         return true;
+      })
+      // Capitalize each keyword (Title Case) for professional appearance
+      .map((k: string) => {
+        const lower = k.toLowerCase();
+        return lower.split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
       })
       .slice(0, 20);
 

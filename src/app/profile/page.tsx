@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { colors } from "@/theme";
 import { loadProfile, loadBookmarks, clearProfile } from "@/lib/storage";
 import { calculateProbabilities } from "@/lib/probability";
+import { useAuth } from "@/lib/auth";
 import type { UserProfile, ProbabilityResult } from "@/types";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [bookmarkedCourses, setBookmarkedCourses] = useState<ProbabilityResult[]>([]);
@@ -31,8 +33,11 @@ export default function ProfilePage() {
     setLoading(false);
   }, [router]);
 
-  const handleLogout = () => {
-    clearProfile();
+  // Signed-in users sign out (which also clears the local cache); guests just
+  // clear their locally-stored profile.
+  const handleLogout = async () => {
+    if (user) await signOut();
+    else clearProfile();
     router.replace("/");
   };
 
@@ -59,8 +64,9 @@ export default function ProfilePage() {
           Can<span style={{ color: colors.accent }}>Go</span>Uni
         </Link>
         <nav style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {!user && <Link href="/login" style={navLinkStyle}>Sign in to save</Link>}
           <Link href="/dashboard" style={navLinkStyle}>Back to results</Link>
-          <button onClick={handleLogout} style={navBtnStyle}>Logout</button>
+          <button onClick={handleLogout} style={navBtnStyle}>{user ? "Sign out" : "Clear profile"}</button>
         </nav>
       </header>
 
@@ -70,9 +76,18 @@ export default function ProfilePage() {
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.faint, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>
             Your Profile
           </div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "32px", marginBottom: "32px" }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "32px", marginBottom: "12px" }}>
             {profile.schoolType} Student
           </h1>
+          {user ? (
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: colors.accent, marginBottom: "32px" }}>
+              ✓ Signed in as {user.email} · saved to your account
+            </p>
+          ) : (
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: colors.muted, marginBottom: "32px" }}>
+              Guest mode — stored in this browser only. <Link href="/login" style={{ color: colors.accent }}>Sign in to save across devices →</Link>
+            </p>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "32px" }}>
             {/* Academic Score */}

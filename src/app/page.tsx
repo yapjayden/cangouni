@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { colors } from "@/theme";
 import { loadProfile } from "@/lib/storage";
+import { useAuth } from "@/lib/auth";
 import type { UserProfile } from "@/types";
 
 const btnPrimary: React.CSSProperties = {
@@ -21,12 +22,16 @@ const btnPrimary: React.CSSProperties = {
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   useEffect(() => {
     setProfile(loadProfile());
-  }, []);
+  }, [user]);
+
+  // Show the profile chip if signed in or a local profile exists.
+  const hasProfile = Boolean(user) || Boolean(profile);
 
   return (
     <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text, fontFamily: "var(--font-ui), sans-serif" }}>
@@ -43,12 +48,12 @@ export default function LandingPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
           <button type="button" onClick={() => scrollTo("features")} style={navBtn}>Courses</button>
           <button type="button" onClick={() => scrollTo("how-it-works")} style={navBtn}>About</button>
-          {profile ? (
+          {hasProfile ? (
             <Link href="/profile" style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", borderRadius: "50%", background: colors.accent, color: colors.bg, fontWeight: 700, fontSize: "16px" }} title="Profile">
-              {profile.schoolType === "JC" ? "J" : "P"}
+              {profile?.schoolType === "Poly" ? "P" : profile?.schoolType === "JC" ? "J" : "•"}
             </Link>
           ) : (
-            <button type="button" onClick={() => router.push("/onboard")} style={{ ...btnPrimary, padding: "10px 20px", fontSize: "13px" }}>Get Started</button>
+            <button type="button" onClick={() => router.push("/login")} style={{ ...btnPrimary, padding: "10px 20px", fontSize: "13px" }}>Sign in</button>
           )}
         </div>
       </nav>
@@ -65,7 +70,7 @@ export default function LandingPage() {
           Enter your results. We crunch the real IGP numbers and show you exactly which courses you stand a chance at — across all 6 local universities.
         </p>
         <div style={{ display: "flex", gap: "12px", marginBottom: "72px" }}>
-          <button type="button" onClick={() => router.push("/onboard")} style={btnPrimary}>Check My Chances →</button>
+          <button type="button" onClick={() => router.push("/login")} style={btnPrimary}>Check My Chances →</button>
           <button type="button" onClick={() => scrollTo("how-it-works")} style={{ background: "transparent", color: colors.muted, border: "1px solid rgba(255,255,255,0.12)", padding: "14px 24px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}>How it works</button>
         </div>
         <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "40px" }}>
@@ -116,7 +121,7 @@ export default function LandingPage() {
         <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "clamp(32px, 5vw, 56px)", marginBottom: "36px" }}>
           Confirm can one.<br /><span style={{ color: colors.accent }}>Start here.</span>
         </h2>
-        <button type="button" onClick={() => router.push("/onboard")} style={{ ...btnPrimary, padding: "16px 36px", fontSize: "15px" }}>Check My Chances →</button>
+        <button type="button" onClick={() => router.push("/login")} style={{ ...btnPrimary, padding: "16px 36px", fontSize: "15px" }}>Check My Chances →</button>
       </section>
 
       <footer style={{ padding: "32px 48px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between" }}>

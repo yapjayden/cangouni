@@ -609,7 +609,7 @@ export const universityData: CourseIGP[] = [
     rankPoints90: 71.25,
     rankPoints70: 56.25,
     polyGPA: 3.42,
-    hasInterview: false,
+    hasInterview: true, // poly applicants only (selection test)
     intake: 135,
   },
   {
@@ -621,7 +621,7 @@ export const universityData: CourseIGP[] = [
     rankPoints90: 66.25,
     rankPoints70: 51.25,
     polyGPA: 3.42,
-    hasInterview: false,
+    hasInterview: true, // poly applicants only (selection test)
     intake: 65,
   },
 

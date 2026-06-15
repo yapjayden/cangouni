@@ -108,7 +108,11 @@ export function calculateProbabilities(profile: UserProfile): ProbabilityResult[
     .filter(course => (profile.schoolType === "Poly" ? course.polyGpa10 != null : true))
     .map(course => {
       const t = track(course, profile);
-      const chance = admissionChance(t.cutoff, t.max, t.score, course.requiresAssessment);
+      // Interviews / aptitude tests / portfolios apply to POLYTECHNIC applicants
+      // only — JC ('A'-level) students are admitted on grades alone for these
+      // programmes, so the assessment uncertainty shouldn't dent their estimate.
+      const assessApplies = course.requiresAssessment && profile.schoolType === "Poly";
+      const chance = admissionChance(t.cutoff, t.max, t.score, assessApplies);
       const s = suitability(course, profile);
       const matchedLifestyle = matchedLifestyleTags(course, profile);
 
@@ -125,7 +129,7 @@ export function calculateProbabilities(profile: UserProfile): ProbabilityResult[
           cutoff: Math.round(t.cutoff * 10) / 10,
           studentScore: Math.round(t.score * 10) / 10,
           scaleLabel: t.scaleLabel,
-          interview: course.requiresAssessment,
+          interview: assessApplies,
           interests: s.interests,
           subjects: s.subjects,
           industries: s.industries,
@@ -134,7 +138,7 @@ export function calculateProbabilities(profile: UserProfile): ProbabilityResult[
           matchedSubjects: s.matchedSubjects,
           matchedIndustries: s.matchedIndustries,
         },
-        label: `${chance}%${course.requiresAssessment ? "*" : ""}`,
+        label: `${chance}%${assessApplies ? "*" : ""}`,
       };
     })
     .sort((a, b) => b.combinedScore - a.combinedScore);

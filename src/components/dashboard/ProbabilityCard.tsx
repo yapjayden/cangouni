@@ -122,6 +122,11 @@ export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare
             Interview*
           </span>
         )}
+        {course.university === "SUTD" && (
+          <span title="SUTD does not publish per-programme grade profiles — figures are estimated." style={{ fontFamily: "var(--font-mono)", fontSize: "8px", padding: "3px 8px", border: "0.5px solid rgba(154,163,146,0.4)", color: "#9AA392" }}>
+            Estimated†
+          </span>
+        )}
       </div>
 
       {matchBits.length > 0 && (

@@ -178,11 +178,16 @@ export default function DashboardPage() {
             {filtered.length} courses ranked for you
           </h1>
           <p style={{ fontFamily: "var(--font-ui)", fontSize: "14px", color: colors.muted }}>
-            {profile.schoolType} · {scoreLabel} · * = may require interview
+            {profile.schoolType} · {scoreLabel}
+            {profile.schoolType === "Poly" ? " · * = interview / aptitude test required" : ""} · † = estimated data
           </p>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: colors.faint, lineHeight: 1.6, marginTop: "10px", maxWidth: "640px" }}>
             Admission chance is an estimate from past IGP cut-offs — use it to compare courses, not as a guarantee.
             Match shows how well a course fits your subjects, interests and priorities.
+            {profile.schoolType === "JC"
+              ? " Interviews / aptitude tests for these programmes apply to polytechnic applicants — as an 'A'-level student you're assessed on grades."
+              : ""}
+            {" "}† SUTD does not publish per-programme grade profiles, so its figures are estimated.
           </p>
         </div>
 

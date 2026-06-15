@@ -140,10 +140,48 @@ Return ONLY valid JSON — no markdown, no extra text:
       })
       .slice(0, 20);
 
+    // Map detected interests to actual category IDs
+    const interestMap: Record<string, string> = {
+      "technology": "technology", "tech": "technology",
+      "ai": "AI", "ai and ml": "AI", "ai/ml": "AI", "machine learning": "AI",
+      "computing": "computing", "computer": "computing",
+      "engineering": "engineering",
+      "business": "business",
+      "finance": "finance",
+      "fintech": "fintech",
+      "law": "law",
+      "medicine": "medicine", "medical": "medicine",
+      "healthcare": "healthcare", "health": "healthcare",
+      "design": "design",
+      "architecture": "architecture",
+      "data": "data", "data science": "data",
+      "analytics": "analytics",
+      "social sciences": "social sciences", "social science": "social sciences",
+      "psychology": "psychology",
+      "communications": "communications", "communication": "communications",
+      "science": "science",
+      "biotech": "biotech", "biotechnology": "biotech",
+      "economics": "economics",
+      "marketing": "marketing",
+      "supply chain": "supply chain",
+      "games": "games", "game development": "games",
+      "arts": "arts", "art": "arts",
+    };
+
+    const mappedInterests = (parsed.detectedInterests ?? [])
+      .map((interest: string) => {
+        const lower = interest.toLowerCase().trim();
+        return interestMap[lower] || lower;
+      })
+      .filter((id: string) => {
+        // Only include if it's a valid category ID
+        return ["technology", "AI", "computing", "engineering", "business", "finance", "fintech", "law", "medicine", "healthcare", "design", "architecture", "data", "analytics", "social sciences", "psychology", "communications", "science", "biotech", "economics", "marketing", "supply chain", "games", "arts"].includes(id);
+      });
+
     return NextResponse.json({
       rawText: trimmed,
       keywords: filtered,
-      detectedInterests: parsed.detectedInterests ?? [],
+      detectedInterests: mappedInterests,
       detectedIndustries: parsed.detectedIndustries ?? [],
     } satisfies ResumeParseResult);
   } catch (e) {

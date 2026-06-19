@@ -7,6 +7,7 @@ import { colors } from "@/theme";
 import { loadProfile, loadBookmarks, clearProfile } from "@/lib/storage";
 import { calculateProbabilities } from "@/lib/probability";
 import { useAuth } from "@/lib/auth";
+import { Logo } from "@/components/Logo";
 import type { UserProfile, ProbabilityResult } from "@/types";
 
 export default function ProfilePage() {
@@ -60,9 +61,7 @@ export default function ProfilePage() {
         padding: "0 32px", borderBottom: "1px solid rgba(255,255,255,0.07)",
         position: "sticky", top: 0, background: "rgba(8,10,8,0.95)", zIndex: 50,
       }}>
-        <Link href="/" style={{ textDecoration: "none", color: colors.text, fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "20px" }}>
-          Can<span style={{ color: colors.accent }}>Go</span>Uni
-        </Link>
+        <Logo size="md" href="/" />
         <nav style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           {!user && <Link href="/login" style={navLinkStyle}>Sign in to save</Link>}
           <Link href="/dashboard" style={navLinkStyle}>Back to results</Link>

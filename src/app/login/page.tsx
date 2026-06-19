@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { colors } from "@/theme";
 import { useAuth } from "@/lib/auth";
+import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,11 +49,9 @@ export default function LoginPage() {
     <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 55% at 50% 0%, rgba(120,190,80,0.07) 0%, transparent 65%)" }} />
 
-      <Link href="/" style={{ display: "flex", alignItems: "baseline", lineHeight: 1, textDecoration: "none", marginBottom: "32px" }}>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "26px", color: colors.text }}>Can</span>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "26px", color: colors.accent }}>Go</span>
-        <span style={{ fontFamily: "var(--font-ui)", fontWeight: 900, fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: colors.text, marginLeft: "5px", alignSelf: "flex-end" }}>Uni</span>
-      </Link>
+      <div style={{ marginBottom: "32px" }}>
+        <Logo size="lg" href="/" />
+      </div>
 
       <div style={{ width: "100%", maxWidth: "380px", background: colors.surface, border: "0.5px solid rgba(255,255,255,0.08)", padding: "32px", zIndex: 1 }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "26px", marginBottom: "6px" }}>

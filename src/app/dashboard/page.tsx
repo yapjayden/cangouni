@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FilterSidebar, type SortKey } from "@/components/dashboard/FilterSidebar";
 import { ResultsGrid } from "@/components/dashboard/ResultsGrid";
 import { CompareTray } from "@/components/dashboard/CompareTray";
+import { Logo } from "@/components/Logo";
 import { calculateProbabilities } from "@/lib/probability";
 import {
   loadProfile,
@@ -158,9 +159,7 @@ export default function DashboardPage() {
         padding: "0 32px", borderBottom: "1px solid rgba(255,255,255,0.07)",
         position: "sticky", top: 0, background: "rgba(8,10,8,0.95)", zIndex: 50,
       }}>
-        <Link href="/" style={{ textDecoration: "none", color: colors.text, fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "20px" }}>
-          Can<span style={{ color: colors.accent }}>Go</span>Uni
-        </Link>
+        <Logo size="md" href="/" />
         <nav style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <button onClick={share} style={navBtnStyle}>{shareLabel}</button>
           <button onClick={downloadCsv} style={navBtnStyle}>Download</button>

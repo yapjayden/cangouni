@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { colors } from "@/theme";
 import { loadProfile } from "@/lib/storage";
 import { useAuth } from "@/lib/auth";
+import { Logo } from "@/components/Logo";
 import type { UserProfile } from "@/types";
 
 const btnPrimary: React.CSSProperties = {
@@ -40,11 +41,7 @@ export default function LandingPage() {
         padding: "0 48px", borderBottom: "1px solid rgba(255,255,255,0.07)",
         position: "sticky", top: 0, background: "rgba(8,10,8,0.92)", backdropFilter: "blur(12px)", zIndex: 50,
       }}>
-        <Link href="/" style={{ display: "flex", alignItems: "baseline", lineHeight: 1, textDecoration: "none" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "22px", color: colors.text }}>Can</span>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "22px", color: colors.accent }}>Go</span>
-          <span style={{ fontFamily: "var(--font-ui)", fontWeight: 900, fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: colors.text, marginLeft: "5px", alignSelf: "flex-end" }}>Uni</span>
-        </Link>
+        <Logo size="md" href="/" />
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
           <button type="button" onClick={() => scrollTo("features")} style={navBtn}>Courses</button>
           <button type="button" onClick={() => scrollTo("how-it-works")} style={navBtn}>About</button>

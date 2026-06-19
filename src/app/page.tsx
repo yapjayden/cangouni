@@ -3,11 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { colors } from "@/theme";
 import { loadProfile } from "@/lib/storage";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import type { UserProfile } from "@/types";
+
+// Shared spring for button press/hover — quick, snappy, professional.
+const btnMotion = {
+  whileHover: { scale: 1.03 },
+  whileTap: { scale: 0.97 },
+  transition: { type: "spring" as const, stiffness: 400, damping: 17 },
+};
 
 const btnPrimary: React.CSSProperties = {
   background: colors.accent,
@@ -50,7 +58,7 @@ export default function LandingPage() {
               {profile?.schoolType === "Poly" ? "P" : profile?.schoolType === "JC" ? "J" : "•"}
             </Link>
           ) : (
-            <button type="button" onClick={() => router.push("/login")} style={{ ...btnPrimary, padding: "10px 20px", fontSize: "13px" }}>Sign in</button>
+            <motion.button {...btnMotion} type="button" onClick={() => router.push("/login")} style={{ ...btnPrimary, padding: "10px 20px", fontSize: "13px" }}>Sign in</motion.button>
           )}
         </div>
       </nav>
@@ -67,7 +75,7 @@ export default function LandingPage() {
           Enter your results. We crunch the real IGP numbers and show you exactly which courses you stand a chance at — across all 6 local universities.
         </p>
         <div style={{ display: "flex", gap: "12px", marginBottom: "72px" }}>
-          <button type="button" onClick={() => router.push("/login")} style={btnPrimary}>Check My Chances →</button>
+          <motion.button {...btnMotion} type="button" onClick={() => router.push("/login")} style={btnPrimary}>Check My Chances →</motion.button>
           <button type="button" onClick={() => scrollTo("how-it-works")} style={{ background: "transparent", color: colors.muted, border: "1px solid rgba(255,255,255,0.12)", padding: "14px 24px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}>How it works</button>
         </div>
         <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "40px" }}>
@@ -118,7 +126,7 @@ export default function LandingPage() {
         <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: "clamp(32px, 5vw, 56px)", marginBottom: "36px" }}>
           Confirm can one.<br /><span style={{ color: colors.accent }}>Start here.</span>
         </h2>
-        <button type="button" onClick={() => router.push("/login")} style={{ ...btnPrimary, padding: "16px 36px", fontSize: "15px" }}>Check My Chances →</button>
+        <motion.button {...btnMotion} type="button" onClick={() => router.push("/login")} style={{ ...btnPrimary, padding: "16px 36px", fontSize: "15px" }}>Check My Chances →</motion.button>
       </section>
 
       <footer style={{ padding: "32px 48px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between" }}>

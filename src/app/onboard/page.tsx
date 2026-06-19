@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { UserProfile, ResumeParseResult } from "@/types";
 import { colors } from "@/theme";
 import { saveProfile, loadProfile } from "@/lib/storage";
@@ -101,8 +102,16 @@ export default function OnboardPage() {
       {/* Form card */}
       <div style={{ width: "100%", maxWidth: "520px", background: colors.surface, border: "0.5px solid rgba(255,255,255,0.08)", padding: "36px" }}>
 
-        {step === 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+        <AnimatePresence mode="wait">
+          {step === 0 && (
+          <motion.div
+            key={`step-${step}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{ display: "flex", flexDirection: "column", gap: "18px" }}
+          >
             <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: colors.text }}>Your academic profile</h2>
             <div>
               <label style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>School type</label>
@@ -174,29 +183,70 @@ export default function OnboardPage() {
                 })}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
-        {step === 1 && <ResumeUpload onParsed={handleResumeParsed} />}
+        <AnimatePresence mode="wait">
+        {step === 1 && (
+          <motion.div
+            key={`step-${step}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <ResumeUpload onParsed={handleResumeParsed} />
+          </motion.div>
+        )}
+        </AnimatePresence>
 
+        <AnimatePresence mode="wait">
         {step === 2 && (
-          <Interests
-            selected={profile.interests}
-            onChange={interests => update({ interests })}
-            suggestedFromResume={resumeData?.detectedInterests}
-          />
+          <motion.div
+            key={`step-${step}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Interests
+              selected={profile.interests}
+              onChange={interests => update({ interests })}
+              suggestedFromResume={resumeData?.detectedInterests}
+            />
+          </motion.div>
         )}
+        </AnimatePresence>
 
+        <AnimatePresence mode="wait">
         {step === 3 && (
-          <Industries
-            selected={profile.preferredIndustries}
-            onChange={preferredIndustries => update({ preferredIndustries })}
-            suggestedFromResume={resumeData?.detectedIndustries}
-          />
+          <motion.div
+            key={`step-${step}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Industries
+              selected={profile.preferredIndustries}
+              onChange={preferredIndustries => update({ preferredIndustries })}
+              suggestedFromResume={resumeData?.detectedIndustries}
+            />
+          </motion.div>
         )}
+        </AnimatePresence>
 
+        <AnimatePresence mode="wait">
         {step === 4 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          <motion.div
+            key={`step-${step}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{ display: "flex", flexDirection: "column", gap: "18px" }}
+          >
             <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300, fontSize: "24px", color: colors.text }}>What matters to you on campus?</h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {["Strong hall life","Research focus","Career-oriented","Sports culture","Study spaces","Vibrant social scene","Overseas exchange","Startup ecosystem","Arts & culture","Close-knit community"].map(pref => {
@@ -211,8 +261,9 @@ export default function OnboardPage() {
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Required-score reminder */}
         {step === 0 && scoreError && (

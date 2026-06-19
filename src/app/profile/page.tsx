@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
   if (loading || !profile) {
     return (
-      <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", color: colors.muted }}>
+      <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", color: colors.muted, fontFamily: "var(--font-ui), sans-serif" }}>
         Loading…
       </main>
     );
@@ -54,7 +54,7 @@ export default function ProfilePage() {
     : `GPA ${profile.gpa ?? "—"}`;
 
   return (
-    <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text }}>
+    <main style={{ minHeight: "100vh", background: colors.bg, color: colors.text, fontFamily: "var(--font-ui), sans-serif" }}>
       <header style={{
         height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 32px", borderBottom: "1px solid rgba(255,255,255,0.07)",

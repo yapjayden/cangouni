@@ -9,6 +9,7 @@ import { saveProfile, loadProfile } from "@/lib/storage";
 import { ResumeUpload } from "@/components/onboard/steps/ResumeUpload";
 import { Interests } from "@/components/onboard/steps/Interests";
 import { Industries } from "@/components/onboard/steps/Industries";
+import { Logo } from "@/components/Logo";
 
 const STEPS = ["Academic", "Resume", "Interests", "Industries", "Lifestyle"];
 
@@ -82,7 +83,12 @@ export default function OnboardPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px" }}>
+    <main style={{ minHeight: "100vh", background: colors.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", position: "relative" }}>
+
+      {/* Home / back button — top left */}
+      <div style={{ position: "absolute", top: "24px", left: "32px" }}>
+        <Logo size="sm" href="/" />
+      </div>
 
       {/* Step indicator */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "48px", width: "100%", maxWidth: "520px" }}>

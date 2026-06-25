@@ -185,16 +185,24 @@ export default function ProfilePage() {
           ) : (
             <div style={{ display: "grid", gap: "12px" }}>
               {bookmarkedCourses.map(r => (
-                <div key={r.course.id} style={{ background: colors.surface, border: "0.5px solid rgba(255,255,255,0.08)", padding: "20px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
+                <div key={r.course.id} style={{ background: colors.surface, border: "0.5px solid rgba(255,255,255,0.08)", padding: "20px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: "15px", color: colors.text }}>
                       {r.course.university} {r.course.course}
                     </div>
                     <div style={{ fontSize: "13px", color: colors.muted, marginTop: "4px" }}>
                       {r.course.faculty} · {r.course.duration} years
                     </div>
+                    <a
+                      href={r.course.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "inline-block", marginTop: "8px", fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.06em", textTransform: "uppercase", color: colors.accent, textDecoration: "none" }}
+                    >
+                      View course details ↗
+                    </a>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <div style={{ fontSize: "18px", fontWeight: 700, color: colors.accent }}>
                       {r.admissionChance}%
                     </div>

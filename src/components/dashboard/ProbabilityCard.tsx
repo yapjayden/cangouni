@@ -166,6 +166,21 @@ export function ProbabilityCard({ result, rank, compareSelected, onToggleCompare
           </button>
         )}
       </div>
+
+      <a
+        href={course.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          marginTop: "4px",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+          fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase",
+          padding: "10px", borderTop: "0.5px solid rgba(255,255,255,0.08)",
+          color: "#78BE50", textDecoration: "none",
+        }}
+      >
+        View course details on {course.university} ↗
+      </a>
     </article>
   );
 }

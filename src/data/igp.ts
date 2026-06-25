@@ -33,6 +33,8 @@ export interface CourseIGP {
   polyGPA: number | null; // 10th-percentile poly GPA (null = small sample / N.A.)
   hasInterview: boolean;
   intake: number;         // places taken up in latest available year
+  url?: string;           // optional: direct link to this course's official page
+                          // (falls back to the university's programme listing)
 }
 
 export const universityData: CourseIGP[] = [

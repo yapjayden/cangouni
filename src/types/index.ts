@@ -47,6 +47,7 @@ export interface CourseEntry {
   lifestyleTags: string[];       // campus-life traits inherited from the university
   resumeKeywords: string[];      // keywords that boost this course from resume match
   notes: string;
+  url: string;                   // official university course/programme page
 }
 
 export interface ProbabilityResult {

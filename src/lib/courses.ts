@@ -83,6 +83,23 @@ const UNIVERSITY_LIFESTYLE: Record<University, string[]> = {
   SUSS: ["Career-oriented", "Close-knit community"],
 };
 
+// Verified official undergraduate programme pages for each university. A course
+// without its own `url` falls back to its university's listing here, where the
+// student can find the specific programme. (Per-course `url` overrides can be
+// added in igp.ts for precise deep links over time.)
+const UNIVERSITY_PROGRAMME_URL: Record<University, string> = {
+  NUS:  "https://www.nus.edu.sg/oam/undergraduate-programmes",
+  NTU:  "https://www.ntu.edu.sg/education/degree-programmes",
+  SMU:  "https://admissions.smu.edu.sg/programmes",
+  SUTD: "https://www.sutd.edu.sg/education/undergraduate/courses/",
+  SIT:  "https://www.singaporetech.edu.sg/undergraduate-programmes",
+  SUSS: "https://www.suss.edu.sg/academics/programmes/full-time-undergraduate",
+};
+
+function courseDetailUrl(c: CourseIGP): string {
+  return c.url ?? UNIVERSITY_PROGRAMME_URL[c.university as University];
+}
+
 function inferTags(text: string, rules: { pattern: RegExp; tags: string[] }[]): string[] {
   const out = new Set<string>();
   for (const { pattern, tags } of rules) {
@@ -118,6 +135,7 @@ function toCourseEntry(c: CourseIGP): CourseEntry {
     lifestyleTags: UNIVERSITY_LIFESTYLE[c.university as University] ?? [],
     resumeKeywords: categories,
     notes: `IGP grades: ${c.aLevelGrades}`,
+    url: courseDetailUrl(c),
   };
 }
 
